@@ -1,28 +1,43 @@
-#!/usr/bin/python2.7
-#File that runs PuMA
-#Koenraad Van Doorslaer, Ken Youens-Clark, Josh Pace
-#Version with input from Ken Youens-Clark
+#!/usr/bin/env python3
+"""docstring"""
 
+import argparse
+import os
+import sys
+from puma_functions3 import * 
 
-from puma_functions import * #Importing all functions for PuMA
-#-----------------------------------------------------------------------------------------
+# --------------------------------------------------
+def get_args():
+    """get args"""
+    parser = argparse.ArgumentParser(description='Find proteins in HPV')
+    parser.add_argument('-i', '--inputfile', help='GenBank HPV file',
+   		                metavar='FILE', type=str, default='')
+    parser.add_argument('-o', '--outfile', metavar='FILE', type=str, 
+                        default='puma.out',
+                        help='Output file (default: %(default)s)')
+    parser.add_argument('-e', '--e2bs', action='store_true',
+                        help='E2 binding sites (default %(default)s)')
+   		                
+    return parser.parse_args()
 
-parser = argparse.ArgumentParser(description='This program displays identified protein '
-                                             'information within a given papillomavirus '
-                                             'genome.')
-
-parser.add_argument('-inputfile',help='Path to a genbank file formatted file that '
-                                    'contains a '
-                               'papillomavirus '
-                               'genome.',required=True)
-
-args = parser.parse_args()
-
-
-#-----------------------------------------------------------------------------------------
-
-#-----------------------------------------------------------------------------------------
+# --------------------------------------------------
 def main():
+    """main"""
+    args = get_args()
+    inputfile = args.inputfile
+    outfile = args.outfile
+    show_e2 = args.e2bs
+
+    if not inputfile:
+        print("--inputfile is required")
+        sys.exit(1)
+
+    if not os.path.isfile(inputfile):
+        print('"{}" is not a file.'.format(inputfile))
+        sys.exit(1)
+
+    print('input file = "{}"'.format(inputfile))
+
     startStop = []
     #Stores the start position of the URR and then all the possible stop positions
 
@@ -32,7 +47,7 @@ def main():
     virus = {}
     # Main dictionary that will store information about proteins, URR, E2BS etc
 
-    for seq_record in SeqIO.parse("/Users/joshpace/Downloads/BPV1_REF.txt", "genbank"):
+    for seq_record in SeqIO.parse(inputfile, "genbank"):
         Origseq = seq_record.seq
         ID = seq_record.name #Name is accesion number
         name = seq_record.description.split(",")[0] #description is name
@@ -52,7 +67,7 @@ def main():
         '''key is protein sequence, ORF[key] (value of ORF) is start position, endOfSeq 
         is calculated end position'''
         if blasted != {}:
-            print blasted
+            print(blasted)
             virus.update(blasted)
             for keys in blasted:
                 if keys == 'L1':#Finding URR start position
@@ -163,10 +178,8 @@ def main():
 
     # for values in result['E2BS']:
     #     print values
-#-----------------------------------------------------------------------------------------
 
 
+# --------------------------------------------------
 if __name__ == '__main__':
     main()
-
-

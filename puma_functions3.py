@@ -1,5 +1,3 @@
-#!/usr/bin/python2.7
-
 #All functions needed for PuMA
 #Koenraad Van Doorslaer, Ken Youens-Clark, Josh Pace
 #Version with input from Ken Youens-Clark
@@ -12,6 +10,7 @@ from Bio.Alphabet import IUPAC
 from Bio.Blast.Applications import NcbiblastpCommandline as blastp
 import os, glob, re, csv, time, operator, argparse, sys
 import pymysql
+import tempfile
 
 
 def Trans_ORF(seq, trans_table, min_protein_length):#This function will translate the genome in all 3 frames and split the ORF on the stop codon (*)
@@ -39,13 +38,13 @@ def Blast(protein_sequence, start, end, genomic_sequence):#This function uses bl
     if M:
         query = protein_sequence[M.start():]
         query = query + "*"
-        with open("/Users/joshpace/Downloads/tempORF.txt", "w") as tempfile:
-            print >> tempfile, '>Blasting'
-            print >> tempfile, query
-        tempfile = "/Users/joshpace/Downloads/tempORF.txt"
-        blasting = blastp(query=tempfile, db="/Users/joshpace/Downloads/blast_test_200/blast_test_200.txt", evalue=0.001, outfmt=5,out="/Users/joshpace/Downloads/Blasted.xml")
+        tmp = tempfile.TemporaryFile()
+        #with open("/Users/joshpace/Downloads/tempORF.txt", "w") as tempfile:
+        tmp.write(b'>Blasting\n')
+        tmp.write(query)
+        blasting = blastp(query=tmp, db="/Users/joshpace/Downloads/blast_test_200/blast_test_200.txt", evalue=0.001, outfmt=5,out="/Users/joshpace/Downloads/Blasted.xml")
         blasting()
-        blastedfile = open("/Users/joshpace/Downloads/Blasted.xml")
+        blastedfile = open("Blasted.xml")
         blasted = str(blastedfile.read())
         DEF = re.search("<Hit_def>((.*))</Hit_def>", blasted)
         if DEF:
@@ -88,10 +87,10 @@ def find_E2BS(genome,URR, URRstart,ID):#This function finds the E2BS in a genome
     startListGenome= []  # Storing the nucleotide start positions in genome of the E2BS
     E2BS = {} #Storing all E2BS
 
-    with open("/Users/joshpace/PuMA_URR_tempfile.fa", "w") as tempfile:#Writting URR to a file so FIMO can be used
-        print >> tempfile, '>URR for %s' %ID
-        print >> tempfile, URR
-    cline = ("fimo --oc E2BS --norc --verbosity 1 --thresh 1.0E-3 /Users/joshpace/meme_3000_TOTAL.txt /Users/joshpace/PuMA_URR_tempfile.fa")#Executing FIMO, Using URR
+    with open("/Users/joshpace/PuMA_URR_tempfile.fa", "w") as tmp:#Writting URR to a file so FIMO can be used
+        tmp.write('>URR for {}'.format(ID) + '\n')
+        tmp.write(URR)
+    cline = ("fimo --oc E2BS --norc --verbosity 1 --thresh 1.0E-3 meme_3000_TOTAL.txt PuMA_URR_tempfile.fa")#Executing FIMO, Using URR
     os.system(str(cline))  # Executing FIMO
 
     for column in csv.reader(open("/Users/joshpace/Google Drive/Independent Study (BME 492(F2017:SP2018))/PycharmProjects/PuMA/E2BS/fimo.txt", "rU"), delimiter='\t'):  # Getting nucleotide start positions from FIMO output file
@@ -142,9 +141,9 @@ def find_E1BS(genome,URR,URRstart,ID):
     E1BS = {} #Storing E1BS
     startURR = 0
 
-    with open("/Users/joshpace/PuMA_URR_tempfile.fa", "w") as tempfile:#Writting URR to a file so FIMO can be used
-        print >> tempfile, '>URR for %s' %ID
-        print >> tempfile, URR
+    with open("/Users/joshpace/PuMA_URR_tempfile.fa", "w") as tmp:#Writting URR to a file so FIMO can be used
+        tmp.write('>URR for {}'.format(ID))
+        tmp.write(URR)
     cline = ("fimo --oc E1BS --norc --verbosity 1 --thresh 1.0E-4 --bgfile /Users/joshpace/background_model_E1BS.txt /Users/joshpace/meme_E1BS_1motif_18_21.txt /Users/joshpace/PuMA_URR_tempfile.fa")#Executing FIMO, Using URR
     os.system(str(cline))  # Executing FIMO
 
