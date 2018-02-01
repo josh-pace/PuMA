@@ -53,7 +53,7 @@ def main():
         name = seq_record.description.split(",")[0] #description is name
         # Opening file and storing the genome
 
-    virus['name'] =name
+    virus['name'] = name
     virus['accession'] = ID
     virus['genome'] = Origseq
     # Adding name etc to dictionary
