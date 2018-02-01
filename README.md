@@ -1,6 +1,9 @@
 # PuMA
+
 Pipeline between Genbank and PaVE
+
 Authors: Koenraad Van Doorslaer, Josh Pace
+
 University of Arizona
 
 # To run:
@@ -9,6 +12,7 @@ University of Arizona
 
 Run `makeblastdb` in "blast_database" or:
 
-    $ cd blast_database
-    $ make
-
+```
+$ cd blast_database
+$ make
+```
