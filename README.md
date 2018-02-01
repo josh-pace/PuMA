@@ -12,5 +12,5 @@ University of Arizona
 
 Run `makeblastdb` in "blast_database" or:
 
-$ cd blast_database
-$ make
+    $ cd blast_database
+    $ make
