@@ -43,7 +43,7 @@ def Blast(protein_sequence, start, end, genomic_sequence):#This function uses bl
             # print >> tempfile, '>Blasting'
             # print >> tempfile, query
         tempfile = "tempORF.txt"
-        blasting = blastp(query=tempfile, db="blast_database/blast_database.txt",
+        blasting = blastp(query=tempfile, db="blast_database.txt",
                           evalue=0.001,outfmt=5,out="Blasted.xml")
         blasting()
         blastedfile = open("Blasted.xml")
