@@ -26,30 +26,9 @@ def get_args():
                         default='puma-out',
                         help='Output directory (default: %(default)s)')
 
-    parser.add_argument('-opt', nargs='*',
-                        help='enter proteins to display:'
-                             ' l1 or L1,'
-                             ' l2 or L2,'
-                             ' e1 or E1,'
-                             ' e2 or E2,'
-                             ' e4 or E4,'
-                             ' e5 or l5,'
-                             ' e6 or E6,'
-                             ' e7 or E7,'
-                             ' e10 or E10,'
-                             ' e2bs or E2BS,'
-                             ' e1bs or E1BS,'
-                             ' urr or URR,'
-                             ' all or ALL for all protein information found')
-
-
-
-
-
-
-
-
-
+    parser.add_argument('-s', '--sites', metavar='STR', type=str,
+                        default='ALL',
+                        help='Comma-separated string of L1 L2 E1 E2 E4 E5 E6 E7 E10 E2BS E1BS URR ALL')
 
     return  parser.parse_known_args()
 
@@ -59,12 +38,17 @@ def get_args():
 #-----------------------------------------------------------------------------------------
 def main():
     """main"""
-
-    args, unkown = get_args()
-    options = []
+    args, _ = get_args()
+    sites = re.split(r'\s*,\s*', args.sites.upper())
     input_file = args.input
     out_dir = args.outdir
     blast_dir = args.blastdb_dir
+
+    valid_sites = set('L1 L2 E1 E2 E4 E5 E6 E7 E10 E2BS E1BS URR ALL'.split())
+
+    if not sites:
+        print('--sites is required')
+        sys.exit(1)
 
     if not input_file:
         print("--i is required")
@@ -81,7 +65,11 @@ def main():
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
 
-    options = list(map(str.upper, args.opt))
+    bad_sites = list(filter(lambda s: s not in valid_sites, sites))
+
+    if bad_sites:
+        print('Invalid site(s): {}'.format(', '.join(bad_sites)))
+        sys.exit(1)
 
     startStop = []
     #Stores the start position of the URR and then all the possible stop positions
@@ -112,7 +100,6 @@ def main():
     for key in ORF:
         endOfSeq = ORF[key] + ((len(key) + 1) * 3)
         blasted = Blast(key, ORF[key], endOfSeq, Origseq, blast_dir, out_dir)
-        print(blasted)
         '''key is protein sequence, ORF[key] (value of ORF) is start position, endOfSeq 
         is calculated end position'''
         if blasted != {}:
@@ -182,7 +169,8 @@ def main():
 
     # Calling E2BS function
     E2BS = find_E2BS(Origseq, URRfound, URRstart, ID, out_dir)
-    #print E2BS
+    print(E2BS)
+    print(type(E2BS))
     virus.update(E2BS)
 
     for key in virus:#Getting E2 nucleotide sequence for the E4 function
@@ -208,8 +196,8 @@ def main():
     '''At this point in the code, everything should be found and everything below this 
     comment is working with MySQL'''
 
-    if options:
-        for name in options:
+    if sites:
+        for name in sites:
             if name == 'ALL':
                 print("Working on this option")
                 sys.exit(1)

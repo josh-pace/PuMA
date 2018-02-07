@@ -2,6 +2,7 @@
 #Koenraad Van Doorslaer, Ken Youens-Clark, Josh Pace
 #Version with input from Ken Youens-Clark
 
+from distutils.spawn import find_executable
 from Bio import SeqIO, GenBank, AlignIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -72,15 +73,10 @@ def Blast(protein_sequence, start, end, genomic_sequence, blast_dir, out_dir):
             print('No BLAST output "{}" (must have failed)'.format(blast_out))
             return
 
-        if not os.path.getsize(blast_out):
-            print('No hits!')
-            return
-
-        print('blast_out "{}"'.format(blast_out))
         blastedfile = open(blast_out, 'rt')
         blasted = str(blastedfile.read())
-        print(blasted)
         DEF = re.search("<Hit_def>((.*))</Hit_def>", blasted)
+
         if DEF:
             if DEF.group(1) == 'L1':
                 real_start = start + M.start() + M.start() + M.start()
@@ -139,9 +135,17 @@ def find_E2BS(genome, URR, URRstart, ID, out_dir):
         tempfile.write(str(URR))
         
     # Executing FIMO, Using URR
+    fimo_exe = find_executable('fimo')
+    if not fimo_exe:
+        print('Please install "fimo" into your $PATH')
+        return
+
     fimo_dir = os.path.join(out_dir, 'E2BS')
-    fimo_cmd = 'fimo --oc {} --norc --verbosity 1 --thresh 1.0E-3 {} {}'
-    cline = (fimo_cmd.format(fimo_dir, 'meme_3000_TOTAL.txt', tmp))
+    if not os.path.isdir(fimo_dir):
+        os.makedirs(fimo_dir)
+
+    fimo_cmd = '{} --oc {} --norc --verbosity 1 --thresh 1.0E-3 {} {}'
+    cline = (fimo_cmd.format(fimo_exe, fimo_dir, 'meme_3000_TOTAL.txt', tmp))
 
     os.system(str(cline))  # Executing FIMO
 
