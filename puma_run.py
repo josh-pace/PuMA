@@ -12,7 +12,8 @@ def get_args():
                                              'information within a given papillomavirus '
                                              'genome.')
 
-    parser.add_argument('-inputfile',help='Path to a genbank file formatted file that '
+    parser.add_argument('-i',metavar='FILE',help='Path to a genbank file formatted file '
+                                              'that '
                                     'contains a '
                                'papillomavirus '
                                'genome.',required=True)
@@ -21,44 +22,21 @@ def get_args():
                         default='puma.out',
                         help='Output file (default: %(default)s)')
 
-    parser.add_argument('-l1', action='store_true',
-                        help='L1 protein, enter l1 or L1')
-
-    parser.add_argument('-l2', action='store_true',
-                        help='L2 protein, enter L2 or L2')
-
-    parser.add_argument('-e1', action='store_true',
-                        help='E1 protein, enter e1 or E1')
-
-    parser.add_argument('-e2', action='store_true',
-                        help='E1 protein, enter e2 or E2')
-
-    parser.add_argument('-e4', action='store_true',
-                        help='E4 protein, enter e4 or E4')
-
-    parser.add_argument('-e5', action='store_true',
-                        help='E5 protein, enter e5 or E5')
-
-    parser.add_argument('-e6', action='store_true',
-                        help='E6 protein, enter e6 or E6')
-
-    parser.add_argument('-e7', action='store_true',
-                        help='E7 protein, enter e7 or E7')
-
-    parser.add_argument('-e10', action='store_true',
-                        help='E10 protein, enter e10 or E10')
-
-    parser.add_argument('-e2bs', action='store_true',
-                        help='E2 binding sites, enter e2bs or E2BS')
-
-    parser.add_argument('-e1bs', action='store_true',
-                        help='E1 binding sites, enter e1bs or E1BS')
-
-    parser.add_argument('-urr', action='store_true',
-                        help='upstream regulatory region, enter urr or URR')
-
-    parser.add_argument('-all', action='store_true',
-                        help='displays all protein information, enter all or ALL')
+    parser.add_argument('-opt', nargs='*',
+                        help='enter proteins to display:'
+                             ' l1 or L1,'
+                             ' l2 or L2,'
+                             ' e1 or E1,'
+                             ' e2 or E2,'
+                             ' e4 or E4,'
+                             ' e5 or l5,'
+                             ' e6 or E6,'
+                             ' e7 or E7,'
+                             ' e10 or E10,'
+                             ' e2bs or E2BS,'
+                             ' e1bs or E1BS,'
+                             ' urr or URR,'
+                             ' all or ALL for all protein information found')
 
 
 
@@ -80,57 +58,21 @@ def main():
 
     args, unkown = get_args()
     options = []
-    inputfile = args.inputfile
+    inputfile= args.i
     outfile = args.outfile
-    show_l1 = args.l1
-    show_l2 = args.l2
-    show_e1 = args.e1
-    show_e2 = args.e2
-    show_e4 = args.e4
-    show_e5 = args.e5
-    show_e6 = args.e6
-    show_e7 = args.e7
-    show_e10 = args.e10
-    show_e2bs = args.e2bs
-    show_e1bs = args.e1bs
-    show_urr = args.urr
-    show_all = args.all
+
 
 
     if not inputfile:
-        print("--inputfile is required")
+        print("--i is required")
         sys.exit(1)
 
     if not os.path.isfile(inputfile):
         print('"{}" is not a file.'.format(inputfile))
         sys.exit(1)
 
-    if show_l1:
-        options.append('L1')
-    if show_l2:
-        options.append('L2')
-    if show_e1:
-        options.append('E1')
-    if show_e2:
-        options.append('E2')
-    if show_e4:
-        options.append('E4')
-    if show_e5:
-        options.append('E5')
-    if show_e6:
-        options.append('E6')
-    if show_e7:
-        options.append('E7')
-    if show_e10:
-        options.append('E10')
-    if show_urr:
-        options.append('URR')
-    if show_e1bs:
-        options.append('E1BS')
-    if show_e2bs:
-        options.append('E2BS')
-    if show_all:
-        options.append('ALL')
+
+    options = list(map(str.upper, args.opt))
 
 
 
