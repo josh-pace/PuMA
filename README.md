@@ -2,7 +2,7 @@
 
 Pipeline between Genbank and PaVE
 
-Authors: Koenraad Van Doorslaer, Josh Pace
+Authors: Koenraad Van Doorslaer, Ken Younes-Clark, Josh Pace
 
 University of Arizona
 
