@@ -13,4 +13,5 @@ University of Arizona
 Run `makeblastdb` in "blast_database" or:
 
     $ cd blast_database
-    $ makeblastdb 
+    $ makeblastdb -in blast_database.txt -dbtype prot
+   
