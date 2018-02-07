@@ -44,12 +44,13 @@ def Blast(protein_sequence, start, end, genomic_sequence, blast_dir, out_dir):
     if M:
         query = protein_sequence[M.start():]
         query = query + "*"
-        with open(os.path.join(out_dir, "tempORF.txt"), "w") as tempfile:
+        orf_file = os.path.join(out_dir, "tempORF.txt")
+
+        with open(orf_file, "w") as tempfile:
             tempfile.write('>Blasting\n')
             tempfile.write(query)
             # print >> tempfile, '>Blasting'
             # print >> tempfile, query
-        tempfile = "tempORF.txt"
         blast_db = os.path.join(blast_dir, "blast_database.txt")
 
         if not os.path.isfile(blast_db):
@@ -60,7 +61,7 @@ def Blast(protein_sequence, start, end, genomic_sequence, blast_dir, out_dir):
         if os.path.isfile(blast_out):
             os.remove(blast_out)
 
-        blasting = blastp(query=tempfile, 
+        blasting = blastp(query=orf_file, 
                           db=blast_db,
                           evalue=0.001,
                           outfmt=5,
