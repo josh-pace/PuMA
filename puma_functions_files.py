@@ -11,8 +11,11 @@ from Bio.Blast.Applications import NcbiblastpCommandline as blastp
 import os, glob, re, csv, time, operator, argparse, sys
 import pymysql
 
-
-def Trans_ORF(seq, trans_table, min_protein_length):#This function will translate the genome in all 3 frames and split the ORF on the stop codon (*)
+#
+# This function will translate the genome in all 3 frames and 
+# split the ORF on the stop codon (*)
+#
+def Trans_ORF(seq, trans_table, min_protein_length):
     ORFs = {}
     for frame in range(3):  # Accounting for all 3 different frames
         trans = str(seq[frame:].translate(trans_table))
@@ -31,23 +34,51 @@ def Trans_ORF(seq, trans_table, min_protein_length):#This function will translat
     return ORFs
 
 
-def Blast(protein_sequence, start, end, genomic_sequence):#This function uses blast to find the different proteins in the translated genome
+#
+# This function uses blast to find the different proteins in 
+# the translated genome
+#
+def Blast(protein_sequence, start, end, genomic_sequence, blast_dir, out_dir):
     result = {}
     M = re.search('M', protein_sequence)
     if M:
         query = protein_sequence[M.start():]
         query = query + "*"
-        with open("tempORF.txt", "w") as tempfile:
+        with open(os.path.join(out_dir, "tempORF.txt"), "w") as tempfile:
             tempfile.write('>Blasting\n')
             tempfile.write(query)
             # print >> tempfile, '>Blasting'
             # print >> tempfile, query
         tempfile = "tempORF.txt"
-        blasting = blastp(query=tempfile, db="blast_database.txt",
-                          evalue=0.001,outfmt=5,out="Blasted.xml")
+        blast_db = os.path.join(blast_dir, "blast_database.txt")
+
+        if not os.path.isfile(blast_db):
+            print('BLAST db "{}" does not exist'.format(blast_db))
+            return
+
+        blast_out = os.path.join(out_dir, "Blasted.xml")
+        if os.path.isfile(blast_out):
+            os.remove(blast_out)
+
+        blasting = blastp(query=tempfile, 
+                          db=blast_db,
+                          evalue=0.001,
+                          outfmt=5,
+                          out=blast_out)
         blasting()
-        blastedfile = open("Blasted.xml")
+
+        if not os.path.isfile(blast_out):
+            print('No BLAST output "{}" (must have failed)'.format(blast_out))
+            return
+
+        if not os.path.getsize(blast_out):
+            print('No hits!')
+            return
+
+        print('blast_out "{}"'.format(blast_out))
+        blastedfile = open(blast_out, 'rt')
         blasted = str(blastedfile.read())
+        print(blasted)
         DEF = re.search("<Hit_def>((.*))</Hit_def>", blasted)
         if DEF:
             if DEF.group(1) == 'L1':
@@ -89,21 +120,38 @@ def Blast(protein_sequence, start, end, genomic_sequence):#This function uses bl
     return result
 
 
-def find_E2BS(genome,URR, URRstart,ID):#This function finds the E2BS in a genome using the URR
+# --------------------------------------------------
+# This function finds the E2BS in a genome using the URR
+#
+def find_E2BS(genome, URR, URRstart, ID, out_dir):
     genomeLength = len(genome) #Getting length of genome
     startListURR = []  # Storing the nucleotide start positions in URR of the E2BS
     startListGenome= []  # Storing the nucleotide start positions in genome of the E2BS
     E2BS = {} #Storing all E2BS
 
-    with open("PuMA_URR_tempfile.fa", "w") as tempfile:#Writting URR to a file so FIMO can be used
+    # Writting URR to a file so FIMO can be used
+    tmp = os.path.join(out_dir, "PuMA_URR_tempfile.fa")
+    with open(tmp, "w") as tempfile:
         # print >> tempfile, '>URR for %s' %ID
         # print >> tempfile, URR
         tempfile.write('>URR for {}\n'.format(ID))
         tempfile.write(str(URR))
-    cline = ("fimo --oc E2BS --norc --verbosity 1 --thresh 1.0E-3 meme_3000_TOTAL.txt PuMA_URR_tempfile.fa")#Executing FIMO, Using URR
+        
+    # Executing FIMO, Using URR
+    fimo_dir = os.path.join(out_dir, 'E2BS')
+    fimo_cmd = 'fimo --oc {} --norc --verbosity 1 --thresh 1.0E-3 {} {}'
+    cline = (fimo_cmd.format(fimo_dir, 'meme_3000_TOTAL.txt', tmp))
+
     os.system(str(cline))  # Executing FIMO
 
-    for column in csv.reader(open("E2BS/fimo.txt", "rU"), delimiter='\t'):  # Getting nucleotide start positions from FIMO output file
+    fimo_out = os.path.join(fimo_dir, 'fimo.txt')
+
+    if not os.path.isfile(fimo_out):
+        print('Failed to create fimo out "{}"'.format(fimo_out))
+        return
+
+    # Getting nucleotide start positions from FIMO output file
+    for column in csv.reader(open(fimo_out, "rU"), delimiter='\t'):  
         if column[3] == 'start':
             startListURR = []
         else:

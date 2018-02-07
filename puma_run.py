@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
 #File that runs PuMA
 #Koenraad Van Doorslaer, Ken Youens-Clark, Josh Pace
 #Version with input from Ken Youens-Clark
@@ -7,20 +7,24 @@
 from puma_functions_files import * #Importing all functions for PuMA
 #-----------------------------------------------------------------------------------------
 def get_args():
-
+    args = sys.argv
+    bin = os.path.dirname(args[0])
     parser = argparse.ArgumentParser(description='Displays identified protein '
                                              'information within a given papillomavirus '
                                              'genome.')
 
-    parser.add_argument('-i',metavar='FILE',help='Path to a genbank file formatted file '
-                                              'that '
-                                    'contains a '
-                               'papillomavirus '
-                               'genome.',required=True)
+    parser.add_argument('-i', '--input', metavar='FILE',
+                        help='Path to a genbank file formatted file that ' +
+                             'contains a papillomavirus genome.',
+                        required=True)
 
-    parser.add_argument('-o', '--outfile', metavar='FILE', type=str,
-                        default='puma.out',
-                        help='Output file (default: %(default)s)')
+    parser.add_argument('-b', '--blastdb_dir', metavar='DIR', type=str,
+                        default=os.path.join(bin, 'blast_database'),
+                        help='BLAST db directory')
+
+    parser.add_argument('-o', '--outdir', metavar='DIR', type=str,
+                        default='puma-out',
+                        help='Output directory (default: %(default)s)')
 
     parser.add_argument('-opt', nargs='*',
                         help='enter proteins to display:'
@@ -58,24 +62,26 @@ def main():
 
     args, unkown = get_args()
     options = []
-    inputfile= args.i
-    outfile = args.outfile
+    input_file = args.input
+    out_dir = args.outdir
+    blast_dir = args.blastdb_dir
 
-
-
-    if not inputfile:
+    if not input_file:
         print("--i is required")
         sys.exit(1)
 
-    if not os.path.isfile(inputfile):
-        print('"{}" is not a file.'.format(inputfile))
+    if not os.path.isfile(input_file):
+        print('--input "{}" is not a file.'.format(input_file))
         sys.exit(1)
 
+    if not os.path.isdir(blast_dir):
+        print('--blastdb_dir "{}" is not a directory.'.format(blast_dir))
+        sys.exit(1)
+
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
 
     options = list(map(str.upper, args.opt))
-
-
-
 
     startStop = []
     #Stores the start position of the URR and then all the possible stop positions
@@ -86,7 +92,7 @@ def main():
     virus = {}
     # Main dictionary that will store information about proteins, URR, E2BS etc
 
-    for seq_record in SeqIO.parse("{}" .format(inputfile), "genbank"):
+    for seq_record in SeqIO.parse("{}" .format(input_file), "genbank"):
         Origseq = seq_record.seq
         ID = seq_record.name #Name is accesion number
         name = seq_record.description.split(",")[0] #description is name
@@ -100,10 +106,13 @@ def main():
 
     print("\nThis is the protein information for {}:\n".format(virus['name']))
 
-
-    for key in ORF:#Calling Blast function for each open reading frame found
+    #
+    # Calling Blast function for each open reading frame found
+    #
+    for key in ORF:
         endOfSeq = ORF[key] + ((len(key) + 1) * 3)
-        blasted = Blast(key, ORF[key], endOfSeq,Origseq)
+        blasted = Blast(key, ORF[key], endOfSeq, Origseq, blast_dir, out_dir)
+        print(blasted)
         '''key is protein sequence, ORF[key] (value of ORF) is start position, endOfSeq 
         is calculated end position'''
         if blasted != {}:
@@ -171,7 +180,8 @@ def main():
 
     virus.update(URR)#Adding URR to main dictionary
 
-    E2BS = find_E2BS(Origseq,URRfound, URRstart,ID)#Calling E2BS function
+    # Calling E2BS function
+    E2BS = find_E2BS(Origseq, URRfound, URRstart, ID, out_dir)
     #print E2BS
     virus.update(E2BS)
 
