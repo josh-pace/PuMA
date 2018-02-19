@@ -101,8 +101,21 @@ def main():
     #
     # Calling Blast function for each open reading frame found
     #
+    i = 0
+    all_file = os.path.join(out_dir, "all.txt")
+    all_fh = open(all_file, 'wt')
+    has_M = re.compile('M')
+
     for key in ORF:
+        if not has_M.search(key):
+            continue
+
+        i += 1
+        all_fh.write('>{}\n{}\n'.format(i, key))
+        continue
+
         endOfSeq = ORF[key] + ((len(key) + 1) * 3)
+
         blasted = Blast(key, ORF[key], endOfSeq, Origseq, blast_dir, out_dir)
         '''key is protein sequence, ORF[key] (value of ORF) is start position, endOfSeq 
         is calculated end position'''
