@@ -38,6 +38,11 @@ def get_args():
 #-----------------------------------------------------------------------------------------
 def main():
     """main"""
+    #
+    #Supressing Biopython warning
+    #
+    warnings.simplefilter('ignore', BiopythonWarning)
+
     args, _ = get_args()
     sites = re.split(r'\s*,\s*', args.sites.upper())
     input_file = args.input
@@ -45,7 +50,6 @@ def main():
     blast_dir = args.blastdb_dir
 
     valid_sites = set('L1 L2 E1 E2 E4 E5 E6 E7 E10 E2BS E1BS URR ALL'.split())
-
     if not sites:
         print('--sites is required')
         sys.exit(1)
@@ -92,7 +96,7 @@ def main():
     # Adding name etc to dictionary
     ORF = Trans_ORF(Origseq, 1, 25)#Calling transORF function to translate genome
 
-    print("\nThis is the protein information for {}:\n".format(virus['name']))
+    print("\nThis is the protein information for {}:".format(virus['name']))
 
     #
     # Calling Blast function for each open reading frame found
@@ -126,7 +130,7 @@ def main():
     URRstart = int(URRstart) +1
     URRstop = int(URRstop) - 1
 
-    genomelen = len(Origseq)
+    genomelen = int(len(Origseq))
 
     if URRstop == 0:
         URRstop = genomelen
@@ -141,7 +145,7 @@ def main():
     #Finding the URR if it goes past the end of the genome
 
     if URRstop > URRstart:
-        URR['URR'] = [URRstart,URRstop]
+        URR['URR'] = [int(URRstart),int(URRstop)]
         '''CASE WHEN URR DOES NOT GO PAST THE LENGTH OF THE GENOME. Makes the URR a 
             dictionary 
             with the key being 'URR' and the value being a list with the order of URR 
@@ -150,7 +154,7 @@ def main():
             genome'''
 
     else:
-        URR['URR'] = [URRstart,genomelen,1,URRstop]
+        URR['URR'] = [int(URRstart),int(genomelen),1,int(URRstop)]
         '''CASE WHEN URR GOES PAST THE LENGTH OF THE GENOME. Makes the URR a dictionary 
         with the key being 'URR' and the value being a list with the order of URR start 
         position in genome, the last position in the genome, the start of the genome, and 
@@ -169,8 +173,6 @@ def main():
 
     # Calling E2BS function
     E2BS = find_E2BS(Origseq, URRfound, URRstart, ID, out_dir)
-    print(E2BS)
-    print(type(E2BS))
     virus.update(E2BS)
 
     for key in virus:#Getting E2 nucleotide sequence for the E4 function
@@ -184,7 +186,7 @@ def main():
 
     virus.update(E4)#Adding E4 to main dictionary
 
-    E1BS = find_E1BS(Origseq,URRfound,URRstart,ID)#Calling E1BS function
+    E1BS = find_E1BS(Origseq, URRfound, URRstart, ID, out_dir)#Calling E1BS function
     try:
         if E1BS['E1BS'][2]:#Finding if E1BS wraps around
             E1BSaround = 'Yes'
@@ -196,27 +198,35 @@ def main():
     '''At this point in the code, everything should be found and everything below this 
     comment is working with MySQL'''
 
-    if sites:
-        for name in sites:
-            if name == 'ALL':
-                print("Working on this option")
-                sys.exit(1)
-            if name =='E2BS':
-                print("{} E2 binding sites found:".format(len(virus['E2BS'])))
-                for i in range(0,len(virus['E2BS']),1):
-                    print('\n{} start and stop position:\n{},{}\n'.format(name,virus[name]
-                                                                   [i],virus[name][i]+11))
-                    print('{} sequnce:\n{}\n'.format(name, str(virus['genome'][virus[name]
-                                                    [i] - 1:virus[name][i]+11]).lower()))
+    if sites[0] == 'ALL':
+        sites = {}
+        sites.update(virus)
+        del sites['name']
+        del sites['genome']
+        del sites['accession']
+        del sites['E1BS']
+        del sites['E2BS']
+
+
+    for name in sites:
+        if name =='E2BS':
+            print("\n{} E2 binding sites found:".format(len(virus['E2BS'])))
+            for i in range(0,len(virus['E2BS'])):
+                print('\n{} start and stop position:\n{},{}\n'.format(name,virus[name]
+                                                               [i],virus[name][i]+11))
+                print('{} sequnce:\n{}\n'.format(name, str(virus['genome'][virus['E2BS'][i]
+                                                       - 1:virus['E2BS'][i]+11]).lower()))
+        if name != 'E2BS':
+
             try:
                 virus[name][3]
 
                 print('\n{} start and stop position:\n{},{},{},{}\n'.format(name,virus
                                  [name][0], virus[name][1],virus[name][2],virus[name][3]))
-                print('{} sequnce:\n{}\n'.format(name, str(virus['genome'][virus[name]
+                print('{} seqeunce:\n{}\n'.format(name, str(virus['genome'][virus[name]
                    [0]-1:] +virus['genome'][virus[name][2]-1:virus[name][ 3]-1]).lower()))
-                print('{} translated sequnce:\n{}'.format(name,str(virus['genome'][
-                    virus[name][0]-1:] + virus[name][virus[name][2]-1:virus[name][3]-1])))
+                if name != 'E1BS':
+                    print('{} translated sequnce:\n{}\n'.format(name,str(virus['genome'][virus[name][0]-1:] + virus[name][virus[name][2]-1:virus[name][3]-1])))
 
 
             except IndexError:
@@ -224,7 +234,9 @@ def main():
                                                                         , virus[name][1]))
                 print('{} sequnce:\n{}\n'.format(name, str(virus['genome'][virus[name]
                                                         [0] - 1:virus[name][1]]).lower()))
-                print('{} translated sequnce:\n{}'.format(name, Seq(str(virus['genome']
+                if name != 'URR':
+                    print('{} translated seqeunce:\n{}\n'.format(name, Seq(str(virus[
+                                                                                   'genome']
                                  [virus[name][0] - 1:virus[name][1]])).translate(1)[:-1]))
 
 
