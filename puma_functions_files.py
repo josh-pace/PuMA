@@ -11,6 +11,11 @@ from Bio.Alphabet import IUPAC
 from Bio.Blast.Applications import NcbiblastpCommandline as blastp
 import os, glob, re, csv, time, operator, argparse, sys
 import pymysql
+import warnings
+from Bio import BiopythonWarning
+import sqlite3
+
+
 
 #
 # This function will translate the genome in all 3 frames and 
@@ -178,6 +183,7 @@ def find_E2BS(genome, URR, URRstart, ID, out_dir):
             startListGenome.append(genomestart)
 
 
+
     # for value in startListGenome:#Accounting for the case where the sequence is longer then the genome length
     #     if ((value + 12) > genomeLength):
     #         stop = (value + 12) - genomeLength
@@ -198,21 +204,41 @@ def find_E4(E2, genomic_sequence):  # Finds E4
     E4_nt = str(E2[(E4_start * 3) + 1:((E4_end + 1) * 3) + 1])#Getting the E4 nucleotide sequence
     E4_nt_start = re.search(E4_nt, str(genomic_sequence)).start()#Finding nuceotide start position of E4
     E4_nt_end = E4_nt_start + len(E4_nt)#Finding nucleotide end position of E4
-    E4['E4'] = [E4_nt_start + 1, E4_nt_end]# Storing all information into a dictionary
+    E4['E4'] = [int(E4_nt_start) + 1, int(E4_nt_end)]# Storing all information into a
+    # dictionary
     return E4
 
-def find_E1BS(genome,URR,URRstart,ID):
+def find_E1BS(genome, URR, URRstart, ID, out_dir):
     genomeLength = len(genome)
     E1BS = {} #Storing E1BS
     startURR = 0
 
-    with open("PuMA_URR_tempfile.fa", "w") as tempfile:#Writting URR to a file so FIMO can be used
+    tmp = os.path.join(out_dir, "PuMA_URR_tempfile.fa")
+    with open(tmp, "w") as tempfile:#Writting URR to a file so FIMO can be used
         tempfile.write('>URR for {}\n'.format(ID))
         tempfile.write(str(URR))
         # print >> tempfile, '>URR for %s' %ID
         # print >> tempfile, URR
-    cline = ("fimo --oc E1BS --norc --verbosity 1 --thresh 1.0E-4 --bgfile background_model_E1BS.txt meme_E1BS_1motif_18_21.txt PuMA_URR_tempfile.fa")#Executing FIMO, Using URR
+
+    fimo_exe = find_executable('fimo')
+    if not fimo_exe:
+        print('Please install "fimo" into your $PATH')
+        return
+
+    fimo_dir = os.path.join(out_dir, 'E1BS')
+    if not os.path.isdir(fimo_dir):
+        os.makedirs(fimo_dir)
+
+    fimo_cmd = '{} --oc {} --norc --verbosity 1 --thresh 1.0E-4 --bgfile {} {} {}'
+    cline = (fimo_cmd.format(fimo_exe, fimo_dir, 'background_model_E1BS.txt','meme_E1BS_1motif_18_21.txt', tmp))
+
     os.system(str(cline))  # Executing FIMO
+
+    fimo_out = os.path.join(fimo_dir, 'fimo.txt')
+
+    if not os.path.isfile(fimo_out):
+        print('Failed to create fimo out "{}"'.format(fimo_out))
+        return
 
     for column in csv.reader(open("E1BS/fimo.txt", "rU"), delimiter='\t'):  # Getting nucleotide start positions from FIMO output file
         if column[3] == 'start':
@@ -230,10 +256,10 @@ def find_E1BS(genome,URR,URRstart,ID):
 
     if genomestop > genomeLength:#For printing all info
         genomestop = genomestop - genomeLength
-        E1BS['E1BS'] = [genomestart, genomeLength, 1, genomestop]
+        E1BS['E1BS'] = [int(genomestart), int(genomeLength), 1, int(genomestop)]
 
     else:
-        E1BS['E1BS'] = [genomestart, genomestop]
+        E1BS['E1BS'] = [int(genomestart), int(genomestop)]
 
 
 
