@@ -110,10 +110,6 @@ def main():
         if not has_M.search(key):
             continue
 
-        i += 1
-        all_fh.write('>{}\n{}\n'.format(i, key))
-        continue
-
         endOfSeq = ORF[key] + ((len(key) + 1) * 3)
 
         blasted = Blast(key, ORF[key], endOfSeq, Origseq, blast_dir, out_dir)
@@ -133,6 +129,8 @@ def main():
     startStop = sorted(startStop)
     # Putting postions in increasing order to find URR stop position
 
+    #URRstart = 0
+    #URRstop = 0
     for numbers in startStop:#Finding URR stop position
         if numbers == URRstart:
             if numbers == startStop[-1]:
