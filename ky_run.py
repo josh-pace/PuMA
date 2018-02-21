@@ -122,8 +122,10 @@ def main():
         print('Invalid site(s): {}'.format(', '.join(bad_sites)))
         sys.exit(1)
 
-    if not input_format in set(['fasta', 'genbank']):
-        print('Invalid format: {}'.format(input_format))
+    valid_format = set(['fasta', 'genbank'])
+    if not input_format in valid_format:
+        msg = 'Invalid format ({}), please choose from {}'
+        print(msg.format(input_format, ', '.join(valid_format)))
         sys.exit(1)
 
     recs = list(SeqIO.parse(input_file, input_format))
@@ -144,32 +146,28 @@ def main():
     orfs_fh = open(orfs_fa, 'wt')
     for i, orf in enumerate(orfs):
         orfs_fh.write('\n'.join(['>' + str(i + 1), orf[0], '']))
+    orfs_fh.close()
 
     print('Wrote {} ORFs to "{}"'.format(len(orfs), orfs_fa))
 
     blast_db = os.path.join(blast_dir, 'blast_database.txt')
     blast_out = os.path.join(out_dir, 'blast_results.tab')
 
-    # This will be the real code
-    #if os.path.isfile(blast_out):
-    #    os.remove(blast_out)
+    if os.path.isfile(blast_out):
+        os.remove(blast_out)
 
-    # I'm having trouble getting blast to run either with the "blastp" 
-    # function or using subprocess, so I just run it manually and don't
-    # worry about running it here.  WTF?
-    if not os.path.isfile(blast_out):
-        print('BLASTing')
-#        blastp(query=orfs_fa, 
-#               db=blast_db, 
-#               evalue=evalue, 
-#               outfmt=5, 
-#               out=blast_out)
+    print('BLASTing')
+    cmd = blastp(query=orfs_fa,
+                 db=blast_db,
+                 evalue=evalue,
+                 outfmt=6,
+                 out=blast_out)
 
-#        blastp_bin = '/usr/local/ncbi/blast/bin/blastp'
-#        tmpl = '{} -query {} -db {} -evalue {} -outfmt {} -out {}'
-#        cmd = tmpl.format(blastp_bin, orfs_fa, blast_db, evalue, 6, blast_out)
-#        print(cmd)
-#        subprocess.run(cmd.split())
+    stdout, stderr = cmd()
+    if stdout:
+        print("STDOUT = ", stdout)
+    if stderr:
+        print("STDERR = ", stderr)
 
     if not os.path.isfile(blast_out) or not os.path.getsize(blast_out):
         print('No BLAST output "{}" (must have failed)'.format(blast_out))
@@ -181,7 +179,6 @@ def main():
     # and I'm trying to figure out the L1 business and URR
 
     print('Done.')
-
 
 # --------------------------------------------------
 if __name__ == '__main__':
