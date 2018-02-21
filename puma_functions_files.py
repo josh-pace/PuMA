@@ -47,76 +47,74 @@ def Trans_ORF(seq, trans_table, min_protein_length):
 def Blast(protein_sequence, start, end, genomic_sequence, blast_dir, out_dir):
     result = {}
     M = re.search('M', protein_sequence)
-    if M:
-        query = protein_sequence[M.start():]
-        query = query + "*"
-        orf_file = os.path.join(out_dir, "tempORF.txt")
 
-        with open(orf_file, "w") as tempfile:
-            tempfile.write('>Blasting\n')
-            tempfile.write(query)
-            # print >> tempfile, '>Blasting'
-            # print >> tempfile, query
-        blast_db = os.path.join(blast_dir, "blast_database.txt")
+    if not M:
+        return
 
-        if not os.path.isfile(blast_db):
-            print('BLAST db "{}" does not exist'.format(blast_db))
-            return
+    query = protein_sequence[M.start():]
+    query = query + "*"
+    orf_file = os.path.join(out_dir, "tempORF.txt")
 
-        blast_out = os.path.join(out_dir, "Blasted.xml")
-        if os.path.isfile(blast_out):
-            os.remove(blast_out)
+    with open(orf_file, "w") as tempfile:
+        tempfile.write('>Blasting\n')
+        tempfile.write(query)
+        # print >> tempfile, '>Blasting'
+        # print >> tempfile, query
+    blast_db = os.path.join(blast_dir, "blast_database.txt")
 
-        blasting = blastp(query=orf_file, 
-                          db=blast_db,
-                          evalue=0.001,
-                          outfmt=5,
-                          out=blast_out)
-        blasting()
+    if not os.path.isfile(blast_db):
+        print('BLAST db "{}" does not exist'.format(blast_db))
+        return
 
-        if not os.path.isfile(blast_out):
-            print('No BLAST output "{}" (must have failed)'.format(blast_out))
-            return
+    blast_out = os.path.join(out_dir, "Blasted.xml")
+    if os.path.isfile(blast_out):
+        os.remove(blast_out)
 
-        blastedfile = open(blast_out, 'rt')
-        blasted = str(blastedfile.read())
-        DEF = re.search("<Hit_def>((.*))</Hit_def>", blasted)
+    blastp(query=orf_file, db=blast_db, evalue=0.001, outfmt=5, out=blast_out)
 
-        if DEF:
-            if DEF.group(1) == 'L1':
-                real_start = start + M.start() + M.start() + M.start()
-                result['L1'] = []
-                L1_pre = genomic_sequence[(start + 3 * M.start()):int(end)]
-                splice = '(C|T)(C|T)(A|C|G|T)(C|T)AG(A)TG'
-                spliced = re.search(splice, str(L1_pre))
-                if spliced:
-                    start_L1 = int(spliced.start()) + 6
-                    if start_L1 % 3 == 0:
-                        if start_L1 > 600:
-                            L1_post = L1_pre
-                            result['L1'] = [int(start_L1), int(end)]  #, str(L1_post),
-                            # Seq(str(L1_post)).translate()]
-                        else:
-                            L1_post = L1_pre[start_L1:]
-                            result['L1'] = [int(real_start) + 1 + int(start_L1),
-                                int(end)] #, str(L1_post), Seq(str(L1_post)).translate()]
-                    else:
+    if not os.path.isfile(blast_out):
+        print('No BLAST output "{}" (must have failed)'.format(blast_out))
+        return
+
+    blastedfile = open(blast_out, 'rt')
+    blasted = str(blastedfile.read())
+    DEF = re.search("<Hit_def>(.*)</Hit_def>", blasted)
+
+    if DEF:
+        if DEF.group(0) == 'L1':
+            real_start = start + M.start() + M.start() + M.start()
+            result['L1'] = []
+            L1_pre = genomic_sequence[(start + 3 * M.start()):int(end)]
+            splice = '(C|T)(C|T)(A|C|G|T)(C|T)AG(A)TG'
+            spliced = re.search(splice, str(L1_pre))
+            if spliced:
+                start_L1 = int(spliced.start()) + 6
+                if start_L1 % 3 == 0:
+                    if start_L1 > 600:
                         L1_post = L1_pre
-                        result['L1'] = [int(real_start ) +1, int(end)] #, L1_post,
-                        # Seq(str(
-                        # L1_post)).translate()]
+                        result['L1'] = [int(start_L1), int(end)]  #, str(L1_post),
+                        # Seq(str(L1_post)).translate()]
+                    else:
+                        L1_post = L1_pre[start_L1:]
+                        result['L1'] = [int(real_start) + 1 + int(start_L1),
+                            int(end)] #, str(L1_post), Seq(str(L1_post)).translate()]
                 else:
                     L1_post = L1_pre
-                    result['L1'] = [int(real_start) +1,int(end)] #, L1_post, Seq(str(
+                    result['L1'] = [int(real_start ) +1, int(end)] #, L1_post,
+                    # Seq(str(
                     # L1_post)).translate()]
             else:
-                real_start = start + M.start() + M.start() + M.start()
-                name = re.search(r'random', DEF.group(1), re.I)
-                if name:
-                    pass
-                else:
-                    result[DEF.group(1)] = [int(real_start) + 1, int(end)] #,
-                    # genomic_sequence[int(real_start):int(end)], query]
+                L1_post = L1_pre
+                result['L1'] = [int(real_start) +1,int(end)] #, L1_post, Seq(str(
+                # L1_post)).translate()]
+        else:
+            real_start = start + M.start() + M.start() + M.start()
+            name = re.search(r'random', DEF.group(0), re.I)
+            if name:
+                pass
+            else:
+                result[DEF.group(0)] = [int(real_start) + 1, int(end)] #,
+                # genomic_sequence[int(real_start):int(end)], query]
 
 
     return result
