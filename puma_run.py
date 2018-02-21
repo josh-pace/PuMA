@@ -4,7 +4,7 @@
 #Version with input from Ken Youens-Clark
 
 
-from puma_functions_files import * #Importing all functions for PuMA
+from puma_functions import * #Importing all functions for PuMA
 #-----------------------------------------------------------------------------------------
 def get_args():
     args = sys.argv
