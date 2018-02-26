@@ -288,11 +288,11 @@ def main():
     real_L1 = '''atggcgttgtggcaacaaggccaaaagctgtatctccctccaacccctgtaagcaaggtgctatgcagtgaaacctatgtgcaaagaaaaagcatattctatcatgcagaaacggaacgcctgttaactgtaggacatccatactaccaagtcactgtgggggacaaaactgttcccaaagtgtctgctaatcaatttagagtttttaaaatacagctccccgatcccaatcagtttgcattgcctgataggactgtgcacaatccaagcaaggagcgcctggtttgggctgtaataggggttcaagtatctcgtggccaaccactaggaggcacagttactgggcaccccacttttaatgctctgcttgatgcagaaaatgttaatagaaaagttactgcacaaacaacagatgacaggaagcaaacaggattagatgctaagcaacaacagattctgttgctgggctgtacccctgcagaaggggaatactggaccacagcccgtccatgtgttactgatagactagaaaatggtgcgtgtcctcctttagaattaaagaacaaacacatagaagatggagacatgatggaaatagggtttggtgctgctgactttaaaacactaaatgccagtaaatcagatctacctcttgacattcaaaatgaaatatgcctgtatccagactacctcaaaatggctgaagatgctgctggaaacagtatgttcttctttgcaagaaaagaacaagtgtatgtaaggcatatatggactcgggggggctctgaaaaagaagcacccagtaaagacttctacctcaaaaatggtagaggtgaagaaactctaaaaatacctagtgtgcactttggcagtcccagtggatccttggtgtccactgataatcaaatatttaacaggccttattggctattcagggctcagggcatgaacaatgggattgcatggaataatttattatttttaactgtaggggataacacacggggaactaaccttagtattagtgtagctgcagatggaaacgcattgtcagagtatgatactggcaaatttaacctataccataggcatatggaagaatataagctagcatttatattggagctgtgctctgttgagattactgcacaaacactgtcacatctgcaaggactgatgccctctgtgctacaaaactgggaaatcggggtgcaacctcctgcttcttctattttagaagatacttataggtacatagagtctcctgcaactaaatgtgcaagtaatgttataccacccaaagaagacccttatgcagggcttaagttttggagcatagacttaaaagaaaagctgtctttggacttagaccaatttcccttgggaagaagattcttagctcagcaaggggcaggatgttcaactgtgagaaagagagctgttgcaaccagaaattccagtaagcctgcaaaaagaaaaaaaatcaaagcttaa'''
     print("Real:{}".format(real_E6))
     if found_E6 ==real_E6:
-        print("YES MIRA")
+        print("YES")
     else:
         print("NOOOO")
     if found_L1 ==real_L1:
-        print("YES MIRA")
+        print("YES")
     else:
         print("NOOOO")
     print("found_proteins:{}".format(found))
