@@ -17,6 +17,8 @@ import sqlite3
 
 
 
+
+
 #
 # This function will translate the genome in all 3 frames and 
 # split the ORF on the stop codon (*)
