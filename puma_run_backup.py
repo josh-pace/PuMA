@@ -101,11 +101,9 @@ def main():
     #
     # Calling Blast function for each open reading frame found
     #
-    i = 0
     for key in ORF:
         endOfSeq = ORF[key] + ((len(key) + 1) * 3)
         blasted = Blast(key, ORF[key], endOfSeq, Origseq, blast_dir, out_dir)
-        i = i + 1
         '''key is protein sequence, ORF[key] (value of ORF) is start position, endOfSeq 
         is calculated end position'''
         if blasted != {}:
@@ -118,8 +116,8 @@ def main():
                 else:#Getting start postions to find URR stop
                     startStop.append(blasted[keys][0])
 
-    print("i={}".format(i))
     startStop = sorted(startStop)
+    print(startStop)
     # Putting postions in increasing order to find URR stop position
 
     for numbers in startStop:#Finding URR stop position

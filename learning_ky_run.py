@@ -79,7 +79,7 @@ def get_orfs(seq, trans_table, min_prot_len):
     return orfs
 
 # --------------------------------------------------
-def Trans_ORF(seq, trans_table, min_protein_length):
+def Trans_ORF1(seq, trans_table, min_protein_length):
     ORFs = {}
     has_m = re.compile('M')
     for frame in range(3):  # Accounting for all 3 different frames
@@ -107,9 +107,24 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
     found_proteins = {}
 
     orfs_dict = Trans_ORF(genome.seq, 1, min_prot_len)
+    print("ORFSDICT:{}".format(len(orfs_dict)))
+
     if not orfs_dict:
         print('No ORFs, must stop.')
         sys.exit(1)
+
+    orfs = get_orfs(genome.seq, 1, min_prot_len)
+
+    if not orfs:
+        print('No ORFs, must stop.')
+        sys.exit(1)
+
+    orfs_fa = os.path.join(out_dir, 'orfs.fa')
+    orfs_fh = open(orfs_fa, 'wt')
+    for i, orf in enumerate(orfs):
+        orfs_fh.write('\n'.join(['>' + str(i + 1), orf[0], '']))
+    orfs_fh.close()
+    print('Wrote {} ORFs to "{}"'.format(len(orfs), orfs_fa))
 
     orfs_fa_dict = os.path.join(out_dir, 'orfs_dict.fa')
     orfs_fh_dict = open(orfs_fa_dict, 'wt')

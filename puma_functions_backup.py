@@ -242,7 +242,8 @@ def find_E1BS(genome, URR, URRstart, ID, out_dir):
         print('Failed to create fimo out "{}"'.format(fimo_out))
         return
 
-    for column in csv.reader(open("E1BS/fimo.txt", "rU"), delimiter='\t'):  # Getting nucleotide start positions from FIMO output file
+    for column in csv.reader(open(fimo_out, "rU"), delimiter='\t'):  # Getting nucleotide
+        # start positions from FIMO output file
         if column[3] == 'start':
             startListURR = []
         else:

@@ -85,7 +85,7 @@ def main():
 
     virus = {}
     # Main dictionary that will store information about proteins, URR, E2BS etc
-
+    blasted = {}
     for seq_record in SeqIO.parse("{}".format(input_file), "genbank"):
         Origseq = seq_record.seq
         ID = seq_record.name  # Name is accesion number
@@ -96,32 +96,42 @@ def main():
     virus['accession'] = ID
     virus['genome'] = Origseq
     # Adding name etc to dictionary
-    ORF = Trans_ORF(Origseq, 1, 25)  # Calling transORF function to translate genome
+    #ORF = Trans_ORF(Origseq, 1, 25)  # Calling transORF function to translate genome
 
     print("\nThis is the protein information for {}:".format(virus['name']))
 
     #
     # Calling Blast function for each open reading frame found
     #
-    i = 0
-    for key in ORF:
-        endOfSeq = ORF[key] + ((len(key) + 1) * 3)
-        blasted = Blast(key, ORF[key], endOfSeq, Origseq, blast_dir, out_dir)
-        i = i + 1
-        '''key is protein sequence, ORF[key] (value of ORF) is start position, endOfSeq 
-        is calculated end position'''
-        if blasted != {}:
-            #        print blasted
-            virus.update(blasted)
-            for keys in blasted:
-                if keys == 'L1':  # Finding URR start position
-                    startStop.append((blasted[keys][1]))
-                    URRstart = blasted[keys][1]
-                else:  # Getting start postions to find URR stop
-                    startStop.append(blasted[keys][0])
 
-    print("i={}".format(i))
+    # for key in ORF:
+    #     endOfSeq = ORF[key] + ((len(key) + 1) * 3)
+    #     blasted = Blast(key, ORF[key], endOfSeq, Origseq, blast_dir, out_dir)
+    #     '''key is protein sequence, ORF[key] (value of ORF) is start position, endOfSeq
+    #     is calculated end position'''
+    #     if blasted != {}:
+    #         #        print blasted
+    #         virus.update(blasted)
+    #         for keys in blasted:
+    #             if keys == 'L1':  # Finding URR start position
+    #                 startStop.append((blasted[keys][1]))
+    #                 URRstart = blasted[keys][1]
+    #             else:  # Getting start postions to find URR stop
+    #                 startStop.append(blasted[keys][0])
+
+
+    blasted.update(blast_proteins(Origseq,25,0.001,blast_dir,out_dir))
+    #print(virus)
+    virus.update(blasted)
+    for keys in blasted:
+        if keys == 'L1':  # Finding URR start position
+            startStop.append((blasted[keys][1]))
+            URRstart = blasted[keys][1]
+        else:  # Getting start postions to find URR stop
+            startStop.append(blasted[keys][0])
+
     startStop = sorted(startStop)
+
     # Putting postions in increasing order to find URR stop position
 
     for numbers in startStop:  # Finding URR stop position
@@ -212,13 +222,10 @@ def main():
         if name == 'E2BS':
             print("\n{} E2 binding sites found:".format(len(virus['E2BS'])))
             for i in range(0, len(virus['E2BS'])):
-                print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name]
-                [i], virus[name][i] + 11))
-                print(
-                    '{} sequnce:\n{}\n'.format(name, str(virus['genome'][virus['E2BS'][i]
-                                                                         - 1:
-                                                                         virus['E2BS'][
-                                                                             i] + 11]).lower()))
+                print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][i]
+                                                                , virus[name][i] + 11))
+                print('{} sequnce:\n{}\n'.format(name, str(virus['genome'][virus['E2BS'][i]
+                                                    - 1:virus['E2BS'][i] + 11]).lower()))
         if name != 'E2BS':
 
             try:
@@ -227,10 +234,8 @@ def main():
                 print('\n{} start and stop position:\n{},{},{},{}\n'.format(name, virus
                 [name][0], virus[name][1], virus[name][2], virus[name][3]))
                 print('{} seqeunce:\n{}\n'.format(name, str(virus['genome'][virus[name]
-                                                                            [0] - 1:] +
-                                                            virus['genome'][
-                                                            virus[name][2] - 1:
-                                                            virus[name][3] - 1]).lower()))
+                              [0] - 1:] +virus['genome'][virus[name][2] - 1:virus[name]
+                                                                    [3] - 1]).lower()))
                 if name != 'E1BS':
                     print('{} translated sequnce:\n{}\n'.format(name, str(
                         virus['genome'][virus[name][0] - 1:] + virus[name][
@@ -241,19 +246,10 @@ def main():
                 print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
                                                                       , virus[name][1]))
                 print('{} sequnce:\n{}\n'.format(name, str(virus['genome'][virus[name]
-                                                                           [0] - 1:
-                                                                           virus[name][
-                                                                               1]]).lower()))
+                                                [0] - 1:virus[name][1]]).lower()))
                 if name != 'URR':
-                    print('{} translated seqeunce:\n{}\n'.format(name, Seq(str(virus[
-                                                                                   'genome']
-                                                                               [virus[
-                                                                                    name][
-                                                                                    0] - 1:
-                                                                                virus[
-                                                                                    name][
-                                                                                    1]])).translate(
-                        1)[:-1]))
+                    print('{} translated seqeunce:\n{}\n'.format(name, Seq(str(virus['genome']
+                                [virus[name][0] - 1:virus[name][1]])).translate(1)[:-1]))
 
     # export_to_mysql(virus,E1BSaround,URRaround)
 
