@@ -47,6 +47,86 @@ def Trans_ORF(seq, trans_table, min_protein_length):
 # This function uses blast to find the different proteins in
 # the translated genome
 #
+
+def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
+    protein_start = {}
+    protein_seq = {}
+    found_proteins = {}
+
+    orfs_dict = Trans_ORF(genome, 1, min_prot_len)
+    if not orfs_dict:
+        print('No ORFs, must stop.')
+        sys.exit(1)
+
+    orfs_fa_dict = os.path.join(out_dir, 'orfs_dict.fa')
+    orfs_fh_dict = open(orfs_fa_dict, 'wt')
+
+    for orf in orfs_dict:
+        orfs_fh_dict.write('\n'.join(['>' + str(orfs_dict[orf]), orf, '']))
+    orfs_fh_dict.close()
+
+    print('Wrote {} ORFs to "{}"'.format(len(orfs_dict), orfs_fa_dict))
+
+    blast_db = os.path.join(blast_dir, 'blast_database.txt')
+    blast_out = os.path.join(out_dir, 'blast_results.tab')
+
+    if os.path.isfile(blast_out):
+        os.remove(blast_out)
+
+    print('BLASTing')
+    cmd = blastp(query=orfs_fa_dict,
+                 db=blast_db,
+                 evalue=evalue,
+                 outfmt=6,
+                 out=blast_out)
+
+    stdout, stderr = cmd()
+    if stdout:
+        print("STDOUT = ", stdout)
+    if stderr:
+        print("STDERR = ", stderr)
+
+    if not os.path.isfile(blast_out) or not os.path.getsize(blast_out):
+        print('No BLAST output "{}" (must have failed)'.format(blast_out))
+        sys.exit(1)
+
+    print('See BLAST out "{}"'.format(blast_out))
+
+    with open(blast_out) as tab_file:
+        for line in csv.reader(tab_file, delimiter="\t"):
+            protein_start[line[1]] = int(line[0])
+
+    with open(orfs_fa_dict) as fasta_file:
+        for line in fasta_file:
+            for num in protein_start:
+                try:
+                    start = int(line[1:])
+                    if start == protein_start[num]:
+                        seq = next(fasta_file)
+                        protein_seq[num] = seq[:-1]
+                        # print("YES")
+                except:
+                    pass
+
+    for seq in protein_seq:
+        for start in protein_start:
+            if seq == start:
+                M = re.search('M',protein_seq[seq])
+                real_start = protein_start[start] + M.start() + M.start() + M.start()
+                end = protein_start[start] + ((len(protein_seq[seq])+1) * 3)
+                found_proteins[seq] = [int(real_start) + 1, int(end)]
+
+
+
+
+    return found_proteins
+
+# --------------------------------------------------
+
+#
+# This function uses blast to find the different proteins in
+# the translated genome
+#
 def Blast(protein_sequence, start, end, genomic_sequence, blast_dir, out_dir):
     result = {}
     M = re.search('M', protein_sequence)
