@@ -62,7 +62,6 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
         orfs_fh.write('\n'.join(['>' + str(orfs[orf]), orf, '']))
     orfs_fh.close()
 
-    print('Wrote {} ORFs to "{}"'.format(len(orfs), orfs_fa))
 
     blast_db = os.path.join(blast_dir, 'blast_database.txt')
     blast_out = os.path.join(out_dir, 'blast_results.tab')
@@ -87,7 +86,6 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
         print('No BLAST output "{}" (must have failed)'.format(blast_out))
         sys.exit(1)
 
-    print('See BLAST out "{}"'.format(blast_out))
 
     with open(blast_out) as tab_file:
         for line in csv.reader(tab_file, delimiter="\t"):

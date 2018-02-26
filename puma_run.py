@@ -20,6 +20,9 @@ def get_args():
                              'contains a papillomavirus genome.',
                         required=True)
 
+    parser.add_argument('-f', '--format', metavar='FORMAT', default='fasta',
+                        help='FASTA/GenBank')
+
     parser.add_argument('-b', '--blastdb_dir', metavar='DIR', type=str,
                         default=os.path.join(bin, 'blast_database'),
                         help='BLAST db directory')
@@ -27,6 +30,12 @@ def get_args():
     parser.add_argument('-o', '--outdir', metavar='DIR', type=str,
                         default='puma-out',
                         help='Output directory (default: %(default)s)')
+    parser.add_argument('-e', '--evalue', metavar='FLOAT', type=float,
+                        default=0.001, help='BLAST evalue')
+
+    parser.add_argument('-m', '--min_prot_len', metavar='NUM', type=int,
+                        default=25,
+                        help='Minimum protein length')
 
     parser.add_argument('-s', '--sites', metavar='STR', type=str,
                         default='ALL',
@@ -50,6 +59,9 @@ def main():
     input_file = args.input
     out_dir = args.outdir
     blast_dir = args.blastdb_dir
+    input_format = args.format.lower()
+    min_prot_len = args.min_prot_len
+    evalue = args.evalue
 
     valid_sites = set('L1 L2 E1 E2 E4 E5 E6 E7 E10 E2BS E1BS URR ALL'.split())
     if not sites:
@@ -77,6 +89,12 @@ def main():
         print('Invalid site(s): {}'.format(', '.join(bad_sites)))
         sys.exit(1)
 
+    valid_format = set(['fasta', 'genbank'])
+    if not input_format in valid_format:
+        msg = 'Invalid format ({}), please choose from {}'
+        print(msg.format(input_format, ', '.join(valid_format)))
+        sys.exit(1)
+
     startStop = []
     # Stores the start position of the URR and then all the possible stop positions
 
@@ -86,7 +104,9 @@ def main():
     virus = {}
     # Main dictionary that will store information about proteins, URR, E2BS etc
     blasted = {}
-    for seq_record in SeqIO.parse("{}".format(input_file), "genbank"):
+    #Stores the blasted results to find URR start and stop
+
+    for seq_record in SeqIO.parse("{}".format(input_file), input_format):
         Origseq = seq_record.seq
         ID = seq_record.name  # Name is accesion number
         name = seq_record.description.split(",")[0]  # description is name
