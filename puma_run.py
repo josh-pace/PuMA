@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # File that runs PuMA
 # Koenraad Van Doorslaer, Ken Youens-Clark, Josh Pace
-# Version with input from Ken Youens-Clark
+# New blast function and dictionary setup
 
 
 from puma_functions import *  # Importing all functions for PuMA
@@ -170,15 +170,15 @@ def main():
         URRstop = genomelen
 
     if URRstop > URRstart:
-        URRfound = Origseq[URRstart:URRstop - 1]
+        URRfound = str(Origseq[URRstart-1:URRstop]).lower()
     # Finding the URR if it stops at or before the end of the genome
 
     else:
-        URRfound = Origseq[URRstart:] + Origseq[:URRstop - 1]
+        URRfound = str(Origseq[URRstart-1:] + Origseq[:URRstop]).lower()
     # Finding the URR if it goes past the end of the genome
 
     if URRstop > URRstart:
-        URR['URR'] = [int(URRstart), int(URRstop)]
+        URR['URR'] = [int(URRstart), int(URRstop),URRfound]
         '''CASE WHEN URR DOES NOT GO PAST THE LENGTH OF THE GENOME. Makes the URR a 
             dictionary 
             with the key being 'URR' and the value being a list with the order of URR 
@@ -187,18 +187,12 @@ def main():
             genome'''
 
     else:
-        URR['URR'] = [int(URRstart), int(genomelen), 1, int(URRstop)]
+        URR['URR'] = [int(URRstart), int(genomelen), 1, int(URRstop),URRfound]
         '''CASE WHEN URR GOES PAST THE LENGTH OF THE GENOME. Makes the URR a dictionary 
         with the key being 'URR' and the value being a list with the order of URR start 
         position in genome, the last position in the genome, the start of the genome, and 
         the end of the URR in the genome'''
 
-    try:
-        if URR['URR'][2]:
-            URRaround = 'Yes'
-    except IndexError:
-        URRaround = 'No'
-    # Finding if URR wraps around genome
 
     virus.update(URR)  # Adding URR to main dictionary
 
@@ -235,59 +229,54 @@ def main():
         del sites['name']
         del sites['genome']
         del sites['accession']
+        del sites['E1']
+        del sites['E6']
+        del sites['E2']
+        del sites['L2']
+        del sites['E7']
+        del sites['URR']
+        del sites['E4']
+        del sites['L1']
         del sites['E1BS']
-        del sites['E2BS']
+
+
+
 
     for name in sites:
         if name == 'E2BS':
             print("\n{} E2 binding sites found:".format(len(virus['E2BS'])))
             for i in range(0, len(virus['E2BS'])):
-                print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][i]
+                print('\n{} start and stop position:\n{},{}\n'.format(name,
+                                                                      virus[name][i]
                                                                 , virus[name][i] + 11))
                 print('{} sequnce:\n{}\n'.format(name, str(virus['genome'][virus['E2BS'][i]
                                                     - 1:virus['E2BS'][i] + 11]).lower()))
-        if name != 'E2BS':
-
-            try:
-                virus[name][3]
-
+        elif name == 'E1BS':
+            if type(virus[name][2]) == int:
                 print('\n{} start and stop position:\n{},{},{},{}\n'.format(name, virus
                 [name][0], virus[name][1], virus[name][2], virus[name][3]))
-                print('{} seqeunce:\n{}\n'.format(name, str(virus['genome'][virus[name]
-                              [0] - 1:] +virus['genome'][virus[name][2] - 1:virus[name]
-                                                                    [3] - 1]).lower()))
-                if name != 'E1BS':
-                    print('{} translated sequnce:\n{}\n'.format(name, str(
-                        virus['genome'][virus[name][0] - 1:] + virus[name][
-                        virus[name][2] - 1:virus[name][3] - 1])))
-
-
-            except IndexError:
+                print('{} seqeunce:\n{}\n'.format(name, virus[name][4]))
+            else:
                 print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
                                                                       , virus[name][1]))
-                print('{} sequnce:\n{}\n'.format(name, str(virus['genome'][virus[name]
-                                                [0] - 1:virus[name][1]]).lower()))
-                if name != 'URR':
-                    print('{} translated seqeunce:\n{}\n'.format(name, Seq(str(virus['genome']
-                                [virus[name][0] - 1:virus[name][1]])).translate(1)[:-1]))
+                print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
+        else:
 
-    # export_to_mysql(virus,E1BSaround,URRaround)
+                if type(virus[name][3]) == int:
+                    print('\n{} start and stop position:\n{},{},{},{}\n'.format(name, virus
+                          [name][0], virus[name][1], virus[name][2], virus[name][3]))
+                    print('{} seqeunce:\n{}\n'.format(name, virus[name][4]))
+                    if name != 'URR':
+                        print('{} translated sequnce:\n{}\n'.format(name, virus[name][
+                            5][:-1]))
+                else:
+                    print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
+                                                                      , virus[name][1]))
+                    print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
+                    if name != 'URR':
+                        print('{} translated seqeunce:\n{}\n'.format(name, virus[name][
+                            3][:-1]))
 
-    # accessionList=get_accession()
-
-    # for value in accessionList:
-    #     export_to_csv(get_genome_info(value))
-    #
-
-    # print export_from_mysql('E2BS','BPV1REF')
-
-    # result = get_genome_info('BPV1REF')
-
-    #
-    # export_to_csv(get_genome_info('AaPV1REF'))
-
-    # for values in result['E2BS']:
-    #     print values
 
 
 # -----------------------------------------------------------------------------------------
