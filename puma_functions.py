@@ -16,7 +16,7 @@ from Bio import BiopythonWarning
 
 # --------------------------------------------------
 #
-#
+#This functions finds all the open reading frames and translates them
 #
 def trans_orf(seq, trans_table, min_protein_length):
     ORFs = {}
@@ -223,7 +223,7 @@ def find_E2BS(genome, URR, URRstart, ID, out_dir):
     return E2BS
 # --------------------------------------------------
 #
-#
+#Finds the E4 protein which is contained within the E2 protein
 #
 
 
@@ -247,7 +247,7 @@ def find_E4(E2, genome):  # Finds E4
     return E4
 # --------------------------------------------------
 #
-#
+#Finds the E1 binding site in the genome using the URR
 #
 
 def find_E1BS(genome, URR, URRstart, ID, out_dir):

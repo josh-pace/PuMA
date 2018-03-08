@@ -50,7 +50,7 @@ def get_args():
 def main():
     """main"""
     #
-    # Supressing Biopython warning
+    # Suppressing Biopython warning
     #
     warnings.simplefilter('ignore', BiopythonWarning)
 
@@ -120,28 +120,10 @@ def main():
 
     print("\nThis is the protein information for {}:".format(virus['name']))
 
-    #
-    # Calling Blast function for each open reading frame found
-    #
-
-    # for key in ORF:
-    #     endOfSeq = ORF[key] + ((len(key) + 1) * 3)
-    #     blasted = Blast(key, ORF[key], endOfSeq, Origseq, blast_dir, out_dir)
-    #     '''key is protein sequence, ORF[key] (value of ORF) is start position, endOfSeq
-    #     is calculated end position'''
-    #     if blasted != {}:
-    #         #        print blasted
-    #         virus.update(blasted)
-    #         for keys in blasted:
-    #             if keys == 'L1':  # Finding URR start position
-    #                 startStop.append((blasted[keys][1]))
-    #                 URRstart = blasted[keys][1]
-    #             else:  # Getting start postions to find URR stop
-    #                 startStop.append(blasted[keys][0])
 
 
-    blasted.update(blast_proteins(Origseq,25,0.001,blast_dir,out_dir))
-    #print(virus)
+    blasted.update(blast_proteins(Origseq,min_prot_len,evalue,blast_dir,out_dir))
+
     virus.update(blasted)
     for keys in blasted:
         if keys == 'L1':  # Finding URR start position
@@ -207,19 +189,12 @@ def main():
             E2seq = Origseq[E2Start - 1:E2Stop]
 
     E4 = find_E4(E2seq, Origseq)  # Calling E4 function
-    # print E4
 
     virus.update(E4)  # Adding E4 to main dictionary
 
     E1BS = find_E1BS(Origseq, URRfound, URRstart, ID, out_dir)  # Calling E1BS function
-    try:
-        if E1BS['E1BS'][2]:  # Finding if E1BS wraps around
-            E1BSaround = 'Yes'
-    except IndexError:
-        E1BSaround = 'No'
 
     virus.update(E1BS)  # Adding E1BS to main dictionary
-    # print E1BS
     '''At this point in the code, everything should be found and everything below this 
     comment is working with MySQL'''
 
@@ -229,15 +204,7 @@ def main():
         del sites['name']
         del sites['genome']
         del sites['accession']
-        del sites['E1']
-        del sites['E6']
-        del sites['E2']
-        del sites['L2']
-        del sites['E7']
-        del sites['URR']
-        del sites['E4']
-        del sites['L1']
-        del sites['E1BS']
+
 
 
 
