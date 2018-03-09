@@ -318,4 +318,3 @@ def find_E1BS(genome, URR, URRstart, ID, out_dir):
     return E1BS
 # --------------------------------------------------
 
-

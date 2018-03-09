@@ -1,6 +1,6 @@
 #All functions needed for PuMA
 #Koenraad Van Doorslaer, Ken Youens-Clark, Josh Pace
-#Version with input from Ken Youens-Clark
+# Backup with original blast function
 
 from distutils.spawn import find_executable
 from Bio import SeqIO, GenBank, AlignIO
@@ -595,3 +595,48 @@ def export_to_csv(annotations):#Exports all information to a file
 
 
     return
+
+def output_to_file(dict):
+    del dict['genome']
+    del dict['accession']
+    del dict['E1BS']
+    del dict['E2BS']
+    all = dict['name']
+    name = re.search('\(([^)]+)', all).group(1)
+    dict['name'] = name
+    for key in dict:
+        #print(key)
+        if key == 'name':
+            pass
+        else:
+
+            if type(dict[key][3]) == int:
+
+
+                with open("/Users/joshpace/Downloads/puma-output-files/{}/{}_{"
+                              "}-seq.fa" .format(name,
+                dict['name'], key), "w") as out_file:
+                    out_file.write(">{},{} seq\n".format(dict['name'],key))
+                    out_file.write("{}".format(dict[key][4]))
+                if key != 'URR':
+                    with open("/Users/joshpace/Downloads/puma-output-files/{}/{"
+                                      "}-{}-prot.fa" .format(name,
+                dict['name'], key), "w") as out_file:
+                        out_file.write(">{},{} prot\n".format(dict['name'],key))
+                        out_file.write("{}".format(dict[key][5][:-1]))
+            else:
+                with open("/Users/joshpace/Downloads/puma-output-files/{}/{}-{"
+                              "}-seq.fa" .format(name,
+                    dict['name'], key), "w") as out_file:
+                    out_file.write(">{},{} seq\n".format(dict['name'],key))
+                    out_file.write("{}".format(dict[key][2]))
+                if key != 'URR':
+
+                    with open("/Users/joshpace/Downloads/puma-output-files/{}/{}-{"
+                                  "}-prot.fa" .format(name,
+                dict['name'], key), "w") as out_file:
+                        out_file.write(">{},{} prot\n".format(dict['name'],key))
+                        out_file.write("{}".format(dict[key][3][:-1]))
+
+    return
+# --------------------------------------------------
