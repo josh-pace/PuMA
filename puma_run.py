@@ -125,12 +125,12 @@ def main():
     blasted.update(blast_proteins(Origseq,min_prot_len,evalue,blast_dir,out_dir))
 
     virus.update(blasted)
-    for keys in blasted:
-        if keys == 'L1':  # Finding URR start position
-            startStop.append((blasted[keys][1]))
-            URRstart = blasted[keys][1]
+    for protein in blasted:
+        if protein == 'L1':  # Finding URR start position
+            startStop.append((blasted[protein][1]))
+            URRstart = blasted[protein][1]
         else:  # Getting start postions to find URR stop
-            startStop.append(blasted[keys][0])
+            startStop.append(blasted[protein][0])
 
     startStop = sorted(startStop)
 
@@ -182,10 +182,10 @@ def main():
     E2BS = find_E2BS(Origseq, URRfound, URRstart, ID, out_dir)
     virus.update(E2BS)
 
-    for key in virus:  # Getting E2 nucleotide sequence for the E4 function
-        if key == "E2":
-            E2Start = virus[key][0]
-            E2Stop = virus[key][1]
+    for protein in virus:  # Getting E2 nucleotide sequence for the E4 function
+        if protein == "E2":
+            E2Start = virus[protein][0]
+            E2Stop = virus[protein][1]
             E2seq = Origseq[E2Start - 1:E2Stop]
 
     E4 = find_E4(E2seq, Origseq)  # Calling E4 function
@@ -195,8 +195,6 @@ def main():
     E1BS = find_E1BS(Origseq, URRfound, URRstart, ID, out_dir)  # Calling E1BS function
 
     virus.update(E1BS)  # Adding E1BS to main dictionary
-    '''At this point in the code, everything should be found and everything below this 
-    comment is working with MySQL'''
 
     if sites[0] == 'ALL':
         sites = {}
@@ -214,8 +212,7 @@ def main():
             print("\n{} E2 binding sites found:".format(len(virus['E2BS'])))
             for i in range(0, len(virus['E2BS'])):
                 print('\n{} start and stop position:\n{},{}\n'.format(name,
-                                                                      virus[name][i]
-                                                                , virus[name][i] + 11))
+                    virus[name][i], virus[name][i] + 11))
                 print('{} sequnce:\n{}\n'.format(name, str(virus['genome'][virus['E2BS'][i]
                                                     - 1:virus['E2BS'][i] + 11]).lower()))
         elif name == 'E1BS':

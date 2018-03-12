@@ -57,7 +57,7 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
         print('No ORFs, must stop.')
         sys.exit(1)
 
-    orfs_fa = os.path.join(out_dir, 'orfs_dict.fa')
+    orfs_fa = os.path.join(out_dir, 'orfs.fa')
     orfs_fh = open(orfs_fa, 'wt')
 
     for orf in orfs:
@@ -163,7 +163,7 @@ def find_E2BS(genome, URR, URRstart, ID, out_dir):
     E2BS = {}  # Storing all E2BS
 
     # Writting URR to a file so FIMO can be used
-    tmp = os.path.join(out_dir, "PuMA_URR_tempfile.fa")
+    tmp = os.path.join(out_dir, "puma_urr.fa")
     with open(tmp, "w") as tempfile:
         # print >> tempfile, '>URR for %s' %ID
         # print >> tempfile, URR
@@ -255,7 +255,7 @@ def find_E1BS(genome, URR, URRstart, ID, out_dir):
     E1BS = {}  # Storing E1BS
     startURR = 0
 
-    tmp = os.path.join(out_dir, "PuMA_URR_tempfile.fa")
+    tmp = os.path.join(out_dir, "puma_urr.fa")
     with open(tmp, "w") as tempfile:  # Writting URR to a file so FIMO can be used
         tempfile.write('>URR for {}\n'.format(ID))
         tempfile.write(str(URR))
