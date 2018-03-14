@@ -27,7 +27,7 @@ def get_args():
 # --------------------------------------------------
 def find_orfs(seq, trans_table, min_prot_len):
     """Find all ORFs in the sequence"""
-    orfs_re = re.compile(r'(M[^*]+)')
+    orfs_re = re.compile(r'(M[^*]+\*)?')
     orfs = []
 
     for frame in range(3):
