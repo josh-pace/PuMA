@@ -43,4 +43,19 @@ fi
 ORFS="$(basename "$FILE").orfs"
 ./orf_predictor.py -o "$ORFS" "$FILE"
 
-blastp -query "$ORFS" -subject blast_database/conserved.fa -outfmt 6 -evalue 0.001
+BLAST_OUT="blast-out"
+blastp -query "$ORFS" -subject blast_database/conserved.fa -outfmt 6 -evalue 0.001 > "$BLAST_OUT"
+
+cat "$BLAST_OUT"
+
+# 
+# Find URR
+# 
+URR="urr.txt"
+./urr.py "$BLAST_OUT" "$FILE" # > "$URR"
+
+#
+# Find E2BS
+#
+FIMO_OUT="fimo-out"
+fimo "$URR" > "$FIMO_OUT"
