@@ -65,15 +65,17 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
     orfs_fh.close()
 
 
-    blast_db = os.path.join(blast_dir, 'blast_database.txt')
+    #blast_db = os.path.join(blast_dir, 'blast_database.txt')
+    blast_db = os.path.join(blast_dir, 'conserved.fa')
     blast_out = os.path.join(out_dir, 'blast_results.tab')
 
     if os.path.isfile(blast_out):
         os.remove(blast_out)
 
+
     #print('BLASTing')
     cmd = blastp(query=orfs_fa,
-                 db=blast_db,
+                 subject=blast_db,
                  evalue=evalue,
                  outfmt=6,
                  out=blast_out)
