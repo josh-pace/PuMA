@@ -204,6 +204,8 @@ def main():
         del sites['accession']
 
 
+    #print(virus['URR'])
+
 
 
 
@@ -241,7 +243,7 @@ def main():
                         print('{} translated seqeunce:\n{}\n'.format(name, virus[name][
                             3][:-1]))
 
-
+    return
 
 # -----------------------------------------------------------------------------------------
 
