@@ -41,7 +41,6 @@ if [[ ! -e "$FILE" ]]; then
 fi
 
 ORFS="$(basename "$FILE").orfs"
-
 ./orf_predictor.py -o "$ORFS" "$FILE"
 
 BLAST_OUT="blast-out"
@@ -59,7 +58,7 @@ URR="urr.fa"
 # Find E2BS
 #
 #FIMO_OUT_E2BS="fimo-out-e2bs"
-fimo --oc "$FIMO_OUT_E2BS" --norc --verbosity 1 --thresh 1.0E-3 meme_3000_TOTAL.txt "$URR"
+fimo --oc "$FIMO_OUT_E2BS" --norc --verbosity 1 --thresh 1.0E-3 meme_3000_TOTAL.txt "$URR" 
 
 #FIMO_RESULT_E2BS=""
 #E2BS_FINAL="e2bs.txt"
@@ -69,7 +68,7 @@ fimo --oc "$FIMO_OUT_E2BS" --norc --verbosity 1 --thresh 1.0E-3 meme_3000_TOTAL.
 #Find E1BS
 #
 #FIMO_OUT_E1BS="fimo-out-e1bs"
-#fimo --oc "$FIMO_OUT_E1BS" --norc --verbosity 1 --thresh 1.0E-4 --bgfile background_model_E1BS.txt meme_E1BS_1motif_18_21.txt "$URR" > "$E1BS_FINAL"
+#fimo --oc "$FIMO_OUT_E1BS" --norc --verbosity 1 --thresh 1.0E-4 --bgfile background_model_E1BS.txt meme_E1BS_1motif_18_21.txt "$URR"
 
 #FIMO_RESULTS_E1BS=""
 #E1BS_FINAL="e1bs.txt"
