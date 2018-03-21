@@ -328,7 +328,52 @@ def find_E1BS(genome, URR, URRstart, ID, out_dir):
     return E1BS
 # --------------------------------------------------
 # --------------------------------------------------
+# def to_gff3(dict, genomelen, out_dir):
+#     del dict['genome']
+#     del dict['accession']
+#     del dict['E1BS']
+#     del dict['E2BS']
+#     del dict['URR']
+#     all = dict['name']
+#     name = re.search('\(([^)]+)', all).group(1)
+#     dict['name'] = name
+#
+#     gff3_out = os.path.join(out_dir, '{}.gff3'.format(dict['name']))
+#
+#     with open(gff3_out, 'a') as out_file:
+#         out_file.write("##gff-version 3\n")
+#         out_file.write("##sequence-region {} 1 {}\n".format(dict['name'],genomelen))
+#
+#     # seqname source feature start end score strand frame attribute
+#     for protein in dict:
+#         if protein == 'name':
+#             pass
+#         else:
+#             with open(gff3_out,'a') as out_file:
+#                 out_file.write("\t".join([
+#                     dict['name'],
+#                     'PuMA',
+#                     'CDS',
+#                     dict[protein][0],
+#                     dict[protein][1],
+#                     '.',
+#                     '+',
+#                     '.',
+#                     ';'.join([
+#                         'ID=' + protein,
+#                         'Note=' + str(dict[protein][0]) + '-' + str(dict[protein][1])])
+#                     ])
+#                 )
+#
+#
+#     return
 
+
+# --------------------------------------------------
+
+#
+#Output to gff3 file
+#
 
 def to_gff3(dict, genomelen, out_dir):
     del dict['genome']
@@ -339,35 +384,57 @@ def to_gff3(dict, genomelen, out_dir):
     all = dict['name']
     name = re.search('\(([^)]+)', all).group(1)
     dict['name'] = name
-
     gff3_out = os.path.join(out_dir, '{}.gff3'.format(dict['name']))
 
     with open(gff3_out, 'a') as out_file:
         out_file.write("##gff-version 3\n")
-        out_file.write("##sequence-region {} 1 {}\n".format(dict['name'],genomelen))
+        out_file.write("##sequence-region {} 1 {}\n".format(dict['name'], genomelen))
 
-    # seqname source feature start end score strand frame attribute
     for protein in dict:
         if protein == 'name':
             pass
         else:
-            with open(gff3_out,'a') as out_file:
-                out_file.write("\t".join([
-                    dict['name'],
-                    'PuMA',
-                    'CDS',
-                    dict[protein][0],
-                    dict[protein][1],
-                    '.',
-                    '+',
-                    '.',
-                    ';'.join([
-                        'ID=' + protein,
-                        'Note=' + dict[protein][0] + '-' + dict[protein][1]])
-                    ])
-                )
-
-                    #example gene\t{} {}\t.\t+\t.\tID={};Note=[{}-{"
-                    #out_file.write("{}\texample gene\t{} {}\t.\t+\t.\tID={};Note=[{}-{""}]\n".format(
+            with open(gff3_out, 'a') as out_file:
+                out_file.write(
+            "{}\tPuMA\tCDS\t{}\t{}\t.\t+\t.\tID={};Note=[{}-{}]\n".format(
+                 dict['name'], dict[protein][0], dict[protein][1],
+                protein, dict[protein][ 0], dict[protein][1]))
 
     return
+# --------------------------------------------------
+
+# --------------------------------------------------
+
+#
+#Output of found sequences for verification against PaVE data
+#
+
+def to_results(dict,out_dir):
+    del dict['genome']
+    del dict['accession']
+    del dict['E1BS']
+    del dict['E2BS']
+    del dict['URR']
+
+    all = dict['name']
+    short_name = re.search('\(([^)]+)', all).group(1)
+
+    results_dir = os.path.join('puma_results')
+    if not os.path.isdir(results_dir):
+        os.makedirs(results_dir)
+
+    results = os.path.join(results_dir, '{}_genes.fa'.format(short_name))
+
+    for protein in dict:
+        if protein == 'name':
+            pass
+        else:
+            with open(results,'a') as out_file:
+                out_file.write(">{}, {} gene\n".format(dict['name'],protein))
+                out_file.write("{}\n".format(dict[protein][2]))
+
+
+
+    return
+
+# --------------------------------------------------

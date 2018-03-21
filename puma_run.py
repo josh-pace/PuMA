@@ -207,7 +207,7 @@ def main():
     #print(virus['URR'])
 
 
-
+    print(virus)
 
     for name in sites:
         if name == 'E2BS':
@@ -227,7 +227,7 @@ def main():
                                                                       , virus[name][1]))
                 print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
         else:
-
+            try:
                 if type(virus[name][3]) == int:
                     print('\n{} start and stop position:\n{},{},{},{}\n'.format(name, virus
                           [name][0], virus[name][1], virus[name][2], virus[name][3]))
@@ -242,8 +242,17 @@ def main():
                     if name != 'URR':
                         print('{} translated seqeunce:\n{}\n'.format(name, virus[name][
                             3][:-1]))
+            except IndexError:
+                print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
+                                                                      , virus[name][1]))
+                print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
+                if name != 'URR':
+                    print('{} translated seqeunce:\n{}\n'.format(name, virus[name][
+                        3][:-1]))
 
-    to_gff3(virus,genomelen,out_dir)
+
+    #to_gff3(virus,genomelen,out_dir)
+    #to_results(virus, out_dir)
 
 
     return
