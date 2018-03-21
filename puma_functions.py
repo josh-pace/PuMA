@@ -330,7 +330,7 @@ def find_E1BS(genome, URR, URRstart, ID, out_dir):
 # --------------------------------------------------
 
 
-def to_gff3(dict,genomelen, out_dir):
+def to_gff3(dict, genomelen, out_dir):
     del dict['genome']
     del dict['accession']
     del dict['E1BS']
@@ -351,7 +351,8 @@ def to_gff3(dict,genomelen, out_dir):
             pass
         else:
             with open(gff3_out,'a') as out_file:
-                out_file.write("{}\texample gene\t{} {} .\t+\t.\tID={};Note=[{}-{}]\n".format(
+                out_file.write("{}\texample gene\t{} {}\t.\t+\t.\tID={};Note=[{}-{"
+                               "}]\n".format(
                 dict['name'],dict[protein][0],dict[protein][1],protein,dict[protein][
                     0],dict[protein][1]))
 
