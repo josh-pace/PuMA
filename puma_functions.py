@@ -346,14 +346,28 @@ def to_gff3(dict, genomelen, out_dir):
         out_file.write("##gff-version 3\n")
         out_file.write("##sequence-region {} 1 {}\n".format(dict['name'],genomelen))
 
+    # seqname source feature start end score strand frame attribute
     for protein in dict:
         if protein == 'name':
             pass
         else:
             with open(gff3_out,'a') as out_file:
-                out_file.write("{}\texample gene\t{} {}\t.\t+\t.\tID={};Note=[{}-{"
-                               "}]\n".format(
-                dict['name'],dict[protein][0],dict[protein][1],protein,dict[protein][
-                    0],dict[protein][1]))
+                out_file.write("\t".join([
+                    dict['name'],
+                    'PuMA',
+                    'CDS',
+                    dict[protein][0],
+                    dict[protein][1],
+                    '.',
+                    '+',
+                    '.',
+                    ';'.join([
+                        'ID=' + protein,
+                        'Note=' + dict[protein][0] + '-' + dict[protein][1]])
+                    ])
+                )
+
+                    #example gene\t{} {}\t.\t+\t.\tID={};Note=[{}-{"
+                    #out_file.write("{}\texample gene\t{} {}\t.\t+\t.\tID={};Note=[{}-{""}]\n".format(
 
     return

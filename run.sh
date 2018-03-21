@@ -57,10 +57,10 @@ URR="urr.fa"
 #
 # Find E2BS
 #
-#FIMO_OUT_E2BS="fimo-out-e2bs"
+FIMO_OUT_E2BS="fimo-out-e2bs"
 fimo --oc "$FIMO_OUT_E2BS" --norc --verbosity 1 --thresh 1.0E-3 meme_3000_TOTAL.txt "$URR" 
 
-#FIMO_RESULT_E2BS=""$FIMO_OUT_E2BS"/fimo.txt"
+FIMO_RESULT_E2BS="$FIMO_OUT_E2BS/fimo.txt"
 #E2BS_FINAL="e2bs.txt"
 #./e2bs.py "$FILE" "$URR" "$FIMO_RESULT_E2BS" > "$E2BS_FINAL" 
 
