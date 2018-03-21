@@ -243,7 +243,11 @@ def main():
                         print('{} translated seqeunce:\n{}\n'.format(name, virus[name][
                             3][:-1]))
 
+    to_gff3(virus,genomelen,out_dir)
+
+
     return
+
 
 # -----------------------------------------------------------------------------------------
 

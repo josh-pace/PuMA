@@ -60,7 +60,7 @@ URR="urr.fa"
 #FIMO_OUT_E2BS="fimo-out-e2bs"
 fimo --oc "$FIMO_OUT_E2BS" --norc --verbosity 1 --thresh 1.0E-3 meme_3000_TOTAL.txt "$URR" 
 
-#FIMO_RESULT_E2BS=""
+#FIMO_RESULT_E2BS=""$FIMO_OUT_E2BS"/fimo.txt"
 #E2BS_FINAL="e2bs.txt"
 #./e2bs.py "$FILE" "$URR" "$FIMO_RESULT_E2BS" > "$E2BS_FINAL" 
 
@@ -70,6 +70,6 @@ fimo --oc "$FIMO_OUT_E2BS" --norc --verbosity 1 --thresh 1.0E-3 meme_3000_TOTAL.
 #FIMO_OUT_E1BS="fimo-out-e1bs"
 #fimo --oc "$FIMO_OUT_E1BS" --norc --verbosity 1 --thresh 1.0E-4 --bgfile background_model_E1BS.txt meme_E1BS_1motif_18_21.txt "$URR"
 
-#FIMO_RESULTS_E1BS=""
+#FIMO_RESULTS_E1BS=""$FIMO_OUT_E1BS"/fimo.txt"
 #E1BS_FINAL="e1bs.txt"
 #./e1bs.py "$FILE" "$URR" "$FIMO_RESULTS_E1BS" > "$E1BS_FINAL"

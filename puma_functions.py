@@ -41,6 +41,8 @@ def trans_orf(seq, trans_table, min_protein_length):
     return ORFs
 
 # --------------------------------------------------
+
+# --------------------------------------------------
 #
 # This function uses blast to find the different proteins in
 # the translated genome
@@ -155,6 +157,8 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
 
 # --------------------------------------------------
 
+# --------------------------------------------------
+
 #
 # This function finds the E2BS in a genome using the URR
 #
@@ -224,6 +228,8 @@ def find_E2BS(genome, URR, URRstart, ID, out_dir):
 
     return E2BS
 # --------------------------------------------------
+
+# --------------------------------------------------
 #
 #Finds the E4 protein which is contained within the E2 protein
 #
@@ -247,6 +253,8 @@ def find_E4(E2, genome):  # Finds E4
     E4['E4'] = [int(E4_nt_start) + 1, int(E4_nt_end), sequence, translated]  # Storing
     # all information into a dictionary
     return E4
+# --------------------------------------------------
+
 # --------------------------------------------------
 #
 #Finds the E1 binding site in the genome using the URR
@@ -319,4 +327,32 @@ def find_E1BS(genome, URR, URRstart, ID, out_dir):
     #     E1BS[genomestart] = genome[genomestart - 1:genomestop]
     return E1BS
 # --------------------------------------------------
+# --------------------------------------------------
 
+
+def to_gff3(dict,genomelen, out_dir):
+    del dict['genome']
+    del dict['accession']
+    del dict['E1BS']
+    del dict['E2BS']
+    del dict['URR']
+    all = dict['name']
+    name = re.search('\(([^)]+)', all).group(1)
+    dict['name'] = name
+
+    gff3_out = os.path.join(out_dir, '{}.gff3'.format(dict['name']))
+
+    with open(gff3_out, 'a') as out_file:
+        out_file.write("##gff-version 3\n")
+        out_file.write("##sequence-region {} 1 {}\n".format(dict['name'],genomelen))
+
+    for protein in dict:
+        if protein == 'name':
+            pass
+        else:
+            with open(gff3_out,'a') as out_file:
+                out_file.write("{}\texample gene\t{} {} .\t+\t.\tID={};Note=[{}-{}]\n".format(
+                dict['name'],dict[protein][0],dict[protein][1],protein,dict[protein][
+                    0],dict[protein][1]))
+
+    return
