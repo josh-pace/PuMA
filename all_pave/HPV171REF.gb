@@ -1,0 +1,254 @@
+LOCUS       HPV171REF               7261 bp    DNA     linear   VRL 13-Sep-2017
+DEFINITION  Human papillomavirus 171 (HPV171), complete genome
+ACCESSION   HPV171REF
+VERSION     HPV171REF.1  GI:564732516
+KEYWORDS    .
+SOURCE      HPV171REF
+  ORGANISM  HPV171REF
+            .
+FEATURES             Location/Qualifiers
+     source          1..7261
+                     /host_scientific="Homo sapiens"
+                     /host="Homo sapiens"
+                     /host_common="Human"
+                     /virus_abbr="HPV171"
+                     /organism="HPV171REF"
+                     /db_xref="taxon:1434986"
+     CDS             736..2550
+                     /gene="E1"
+                     /protein_id="HPV171-E1"
+                     /translation="MAEITKGTDNNLKDSWFIDEEAHCIDSLDTYEDLFDMSTECSNI
+                     SSLIDDTVNENAQGNTLALFNEQINQECDRAISELKRKYNKSSSEPTVEALSPRLEAI
+                     RISPDRSIGSKRRLFEEDSGILEDEASHSLVQVETTSSSNGAEKPSVDAACQEILLSR
+                     NKKAKLLTKFEDYFGVPYTELTRNFKSDKSTSENWVISAFAAASDVIEASKTLLQKHC
+                     EYIQCVCFDFSVLYLLQFKHAKNRETVVNLFCSLLNIQDFQMICDPPKCRSVAAALYF
+                     YKQGITQNVYKYGVTPLWVSKLTQVNHQLASQAEAFELSQMVQWAYDNHFIEESTIAY
+                     NYASIANEDANAAAFLKSNNQVRFVRDCSAMVKLYLRQEMRNMSMSEWIFKCCKECDK
+                     EGDWKDIANLLKYQNVNVLSFLTAMRLFFKEIPKRNCILIHGVPDSGKSYFCHSLVRF
+                     LKGKVVSFMNRNSNFWLQPMLECKIGYLDDATYPCWTYIDVNMRNALDGNCICIDAKH
+                     KAPQQHKLPPFLVTSNIDIHKDENFKYLHSRVTSFEFPNKLPLDNEGNPLIKLTDQTW
+                     KSFFLKLSKQLDLQEDENEPERPDRAFRCTTSPIDGNL"
+     CDS             2486..3658
+                     /gene="E2"
+                     /protein_id="HPV171-E2"
+                     /translation="MNQSDLTERLDVLQAQLMAIYEENPTDLQSQIKHQLLLRKEAIV
+                     QYYARKEGYDRLGLQHIPALKISEYHAKTAIKMMLLLESLAKSPYASETWTLPDTSAD
+                     RFNSPPRNCFKKHSYEVEVWFDNDRKNAFPYINWRDIYYQDEDDKWHKVQGKVDYNGL
+                     YFDEIDGTRTYFVVFSKDADRYGSKNIWTVNYDNEQIVPSVTSSARRPSPISEEVGES
+                     STTITAPKEKTNRRGSIHSEEGNPSSTTRIPPRRRRRGGGEQGEQAPSKRQRRAAESD
+                     RESDFVSASEVGTSNRSVPRTGLGRVERLKAEAKDPPIIILQGGANSLKCWRHRCRQK
+                     YKSHFLDITTVFKWVENDIDSRLLVAFANKDQRSAFIALASIPKGVSLSLGSLESL"
+     CDS             2913..3431
+                     /gene="E4"
+                     /protein_id="HPV171-E4"
+                     /translation="MKMISGIKCREKWTTMDCILMKLMVPEPILLCFLKMLIDMAAKI
+                     YGLLIMTMNKLFPLSLAQLGGLLLSPKRSGNLPPPSPHPKKKLTEEDRYTPRRETLAR
+                     PRGFHPDDDEEEEENKENRPPVKDNDELLKVTESLISSLLQKLEQVIDLYQEQVSEEL
+                     RGLKQKLKIRLS"
+     CDS             19..450
+                     /gene="E6"
+                     /protein_id="HPV171-E6"
+                     /translation="MDNLFPTNLEDYCSTFQISFFQLKLKCIFCKCYLTLSDLAAFHE
+                     KVLSLVWKSQICYACCTKCLCVSAKYEVEQFFQCACEVEKLNLLLGQPLSEISIRCYF
+                     CYCLLDLATKLDLIARRKQACLVRGHWRAPCRDCLKRELWL"
+     CDS             453..752
+                     /gene="E7"
+                     /protein_id="HPV171-E7"
+                     /translation="MMGKQCTLNDIVLAENIDEMILPAPLLCEESLSPDDSPEEESLS
+                     PYRVDSTCFTCQRGVRVCVVASEGAIHLLQQLLSTDLSLFCPTCSRVSFRHGRNH"
+     CDS             5159..6736
+                     /gene="L1"
+                     /protein_id="HPV171-L1"
+                     /translation="MATWTPNTGRLYLPPAQPVAKVYSTDEYVIPTDIYFHANTERLL
+                     TVGHPYFDVIDSQNPTKINVPKVSGNQYRVLRLKLPDPNKFALIDKDIYNPERERLVW
+                     RLYGIEIDRGGPLGIGSTGHPLFNKLTDTENPSTYLKIDTKENRLNISCDPKQNQLFI
+                     VGCMPAIGQHWDIAEPCNPPLQAGLCPPIKLVHTPIQDGDMSDIGFGAVNFSTFSESR
+                     ADAPLELINSISKWPDFIQMSKDIYGDRMFFFGKREQMYARHNFCKDGAVGDAIPENL
+                     NDDENVHHRFMLNPKPDTPPYSNLGNSTYFPMPSGSLVSSETQLFNRPFWLHRAQGNN
+                     NGIIWNNDLFVTFLDNTRNTNFLISVYKEDGPMNNNYQYDSTDFRYFMRHTEEVEVEI
+                     ICQLCKIPLEAEILAHINAMNPSILDQWQLAFVPSPPQNLEDTYRFIQSLATMCPKDA
+                     QPKPPEDPYKGLTFWTIDMSDRFTSDLDQTPLGKKFLYQLGQITGTAKRIRSTYSTVT
+                     PSTRRVTKRKRSRAARG"
+     CDS             3660..5150
+                     /gene="L2"
+                     /protein_id="HPV171-L2"
+                     /translation="MLRAPRTKRASVQDIYKSCIQGGDCPEDVKNKVEGTTWADTLLK
+                     AFSSIIYLGHLGIGTGRGSGGSYGYRPFGASNTRPVETPIAPPRPTVPSVDVIGPTDI
+                     LPIAPEAPAIVPLSEGIPETGIIDTPGGGPGLGSTPITVTTSIDPTSEVVGAGEYPTV
+                     ISENSEVAIIDVQTPPPPAKKILLDPSITNEQNPIITRASHTDSDINVFVNPLFDGYN
+                     VGDPEYIELEQINRMHEFEIESPPQESTPITSRMATRARDLYNRYVQQVPTRRADIVG
+                     LTLRPSVSQFENPAFDADVRNLFEEDVEAFSKNADSQVTPRLSATPSGTVRASRLVRK
+                     PGMTTRSGLDIGQRVHLYYDISPIPKETIEMQPLGVTSGESTLVDELAVSSIVNPFEE
+                     AIGDADLDLLDNLEEDFSRSQIILTAGGFEVDDIEVPTIPPGVTFDILHDSYINTNTV
+                     NMDDTTAINIPSIVVPIGPSNSVEIFYYDYDLHPSLKRRKRKRNVF"
+     SPLICED         join(736..754,3094..3431)
+                     /gene="E1^E4"
+                     /protein_id="HPV171-E1^E4"
+                     /translation="MAEITKAQLGGLLLSPKRSGNLPPPSPHPKKKLTEEDRYTPRRE
+                     TLARPRGFHPDDDEEEEENKENRPPVKDNDELLKVTESLISSLLQKLEQVIDLYQEQV
+                     SEELRGLKQKLKIRLS"
+     SPLICED         join(1112..1137,3094..3658)
+                     /gene="E8^E2"
+                     /protein_id="HPV171-E8^E2"
+                     /translation="MKLHILLCSSARRPSPISEEVGESSTTITAPKEKTNRRGSIHSE
+                     EGNPSSTTRIPPRRRRRGGGEQGEQAPSKRQRRAAESDRESDFVSASEVGTSNRSVPR
+                     TGLGRVERLKAEAKDPPIIILQGGANSLKCWRHRCRQKYKSHFLDITTVFKWVENDID
+                     SRLLVAFANKDQRSAFIALASIPKGVSLSLGSLESL"
+     E2BS            7228..7239
+                     /note="E2BS: E2 binding site"
+     E2BS            7157..7168
+                     /note="E2BS: E2 binding site"
+     E2BS            6959..6970
+                     /note="E2BS: E2 binding site"
+     E2BS            7028..7039
+                     /note="E2BS: E2 binding site"
+     E2BS            7068..7079
+                     /note="E2BS: E2 binding site"
+     E2BS            6928..6939
+                     /note="E2BS: E2 binding site"
+     E2BS            1608..1619
+                     /note="E2BS: E2 binding site"
+     URR             join(6737..7261,1..18)
+                     /standardName="URR"
+     gene            736..2550
+                     /gene="E1"
+     gene            join(736..754,3094..3431)
+                     /gene="E1^E4"
+     gene            2486..3658
+                     /gene="E2"
+     gene            2913..3431
+                     /gene="E4"
+     gene            19..450
+                     /gene="E6"
+     gene            453..752
+                     /gene="E7"
+     gene            join(1112..1137,3094..3658)
+                     /gene="E8^E2"
+     gene            5159..6736
+                     /gene="L1"
+     gene            3660..5150
+                     /gene="L2"
+ORIGIN
+        1 gctgacttaa gcatactgat ggataacctg tttcctacca atttagagga ctactgctct
+       61 acttttcaaa tatctttttt tcagctaaag ctaaaatgta tattttgcaa atgctatctt
+      121 acgttatctg atcttgctgc ttttcatgaa aaagttttat ctcttgtttg gaaatcgcaa
+      181 atttgttatg catgctgtac taaatgtttg tgtgtaagtg cgaaatatga agtagaacag
+      241 ttcttccagt gtgcgtgcga agtagaaaag ttgaacttgt tgcttggaca acctttgagt
+      301 gaaatttcaa tacgttgcta tttttgctat tgcttgcttg atcttgccac taaattagac
+      361 ttaatagcaa gaagaaagca agcttgttta gtaagaggac attggagagc tccgtgtaga
+      421 gattgtttaa agagagaatt gtggttgtaa aaatgatggg aaagcaatgt acgcttaatg
+      481 acattgtgct tgctgaaaat attgacgaaa tgatattgcc tgcaccctta ttgtgtgaag
+      541 agtcactgtc accagacgac tctccagagg aggagtctct gtcaccttat agagttgata
+      601 gcacttgttt tacttgtcaa cgcggggttc gtgtgtgtgt agttgcttca gaaggagcaa
+      661 tacacctgct gcagcaactt ttgtcgaccg atctctcctt attttgtcct acgtgttcca
+      721 gagtcagctt tcgccatggc agaaatcact aaaggtactg ataataattt aaaagattct
+      781 tggtttattg atgaggaagc ccattgtata gatagcttgg atacatatga ggacctattt
+      841 gatatgagta ctgaatgttc taatatttcc agtttaattg atgatactgt aaatgaaaac
+      901 gcgcagggga ataccctagc actgttcaac gaacaaataa accaggaatg tgacagggca
+      961 atctcagagt taaaacgaaa gtacaataaa agttcttcgg aacctactgt agaagctctt
+     1021 agtccgcgtt tggaagcaat cagaatttct ccagacagat cgattggcag caaaaggaga
+     1081 ctatttgagg aggacagtgg aatcttagaa gatgaagctt cacattctct tgtgcaggta
+     1141 gaaactacta gtagcagtaa tggcgccgaa aaacctagtg ttgatgcggc ttgccaagaa
+     1201 attttgttga gtagaaataa gaaagctaaa cttttaacaa aatttgaaga ctactttggg
+     1261 gttccttaca cggaattgac gagaaacttt aaaagtgata aatcaacctc agaaaattgg
+     1321 gttatttcag cttttgctgc tgcctcagat gtaatagagg cttccaaaac gttattacaa
+     1381 aaacattgtg aatatattca atgtgtgtgt tttgattttt ctgtattgta tttactacaa
+     1441 tttaagcatg ccaaaaatag agaaaccgtt gtaaatttat tttgttcatt gttaaacatt
+     1501 caagactttc agatgatatg tgatccacct aaatgtcgta gcgtggcagc agctttgtac
+     1561 ttttacaagc aaggtataac acaaaatgtg tataaatatg gtgttacacc tctttgggtt
+     1621 tctaaactaa ctcaagtaaa tcatcaacta gcttcacaag cagaagcatt tgaattgtct
+     1681 caaatggttc agtgggctta tgataaccac tttatagaag agtcaacaat tgcgtataat
+     1741 tatgctagta tagctaatga agatgctaat gcagcagcat ttctaaagag taataatcaa
+     1801 gtgcggtttg ttagagattg cagtgctatg gttaaacttt acttaagaca agaaatgaga
+     1861 aacatgagta tgtctgaatg gatattcaaa tgttgtaaag agtgtgataa agagggagat
+     1921 tggaaagata ttgccaatct tttaaaatat caaaatgtta acgtactgtc atttttaact
+     1981 gctatgagac tgtttttcaa agaaatacca aaaagaaatt gtattttaat acatggtgtg
+     2041 ccagactctg gtaaatctta tttttgtcat tcattagtta ggtttttgaa aggaaaagtt
+     2101 gtttctttta tgaacagaaa ttcaaacttt tggttacagc ctatgttaga gtgtaaaata
+     2161 ggatacttag atgatgctac atatccatgt tggacttaca tagatgttaa catgagaaat
+     2221 gcactagatg gaaattgtat ttgcattgat gcgaaacata aagcacccca acaacataaa
+     2281 ttacctccat ttttagtaac tagtaatata gatatacata aagatgaaaa ctttaagtat
+     2341 cttcatagta gagttaccag ctttgaattt ccaaataaac tacctttaga caatgagggt
+     2401 aatcctctaa ttaaacttac tgatcaaaca tggaaatctt tttttctcaa attatccaaa
+     2461 cagttagacc tccaggaaga cgaaaatgaa ccagagcgac ctgaccgagc gtttagatgt
+     2521 actacaagcc caattgatgg caatttatga ggaaaatcct actgacttgc aatcacaaat
+     2581 taaacatcaa ttattattaa gaaaagaagc aattgttcaa tattatgcta gaaaagaggg
+     2641 ttatgataga ttagggctac aacatatccc agcacttaaa atttccgaat atcatgctaa
+     2701 aactgctata aaaatgatgc tgttattaga aagccttgct aaatcacctt atgcaagcga
+     2761 aacatggaca ttgcctgaca caagtgcaga tcgctttaat tcaccaccta gaaactgttt
+     2821 taaaaagcat agttatgaag tagaagtttg gtttgataat gacaggaaaa atgcgtttcc
+     2881 ttacataaat tggagagaca tttattatca agatgaagat gataagtggc ataaagtgca
+     2941 gggaaaagtg gactacaatg gactgtattt tgatgaaatt gatggtacca gaacctattt
+     3001 tgttgtgttt tctaaagatg ctgatagata tggcagcaaa aatatatgga ctgttaatta
+     3061 tgacaatgaa caaattgttc cctctgtcac tagctcagct cggaggcctt ctcctatctc
+     3121 cgaagaggtc ggggaatctt ccaccaccat caccgcaccc aaagaaaaaa ctaacagaag
+     3181 aggatcgata cactccgagg agggaaaccc tagctcgacc acgaggattc cacccagacg
+     3241 acgacgaaga ggaggaggag aacaaggaga acaggccccc agtaaaagac aacgacgagc
+     3301 tgctgaaagt gacagagagt ctgatttcgt ctctgcttca gaagttggaa caagtaatag
+     3361 atctgtacca agaacaggtc tcggaagagt tgagaggctt aaagcagaag ctaaagatcc
+     3421 gcctatcata atattacaag gtggtgcaaa tagtcttaag tgctggaggc atagatgcag
+     3481 acaaaaatat aaaagtcact ttttagatat aaccacagtt tttaaatggg tagaaaatga
+     3541 tatagatagc aggcttctag ttgcttttgc taataaagat caaaggtcag cttttattgc
+     3601 tcttgctagt atacctaaag gtgtctcatt atcattaggg tctttggaat cattgtaata
+     3661 tgttacgtgc accaagaaca aaacgagcat ctgtacaaga tatttataaa tcttgtattc
+     3721 aaggaggtga ttgtcctgaa gatgttaaaa ataaagtaga aggcactaca tgggctgaca
+     3781 cattattaaa agcattcagt agtattattt atttgggtca tttaggtatt ggaacgggta
+     3841 gaggtagtgg gggctcatac gggtacagac cttttggggc gtcaaacacc agaccggtag
+     3901 aaacacctat agctcctcca agacctactg taccatctgt agatgtaata ggtcccacag
+     3961 acattttacc tatagctcca gaagcaccag ctatagttcc tttaagtgaa ggtatacctg
+     4021 aaacaggaat tatagatact ccaggtggag gtcccggttt aggttctaca cctataacag
+     4081 taacaaccag tatagatcca acttctgaag ttgttggtgc tggtgaatac cctactgtta
+     4141 tatcagaaaa ttctgaagta gctattatag atgttcaaac cccaccacca cctgccaaga
+     4201 agattttatt agatcccagc attacaaatg aacagaatcc aattattaca cgagcctccc
+     4261 atacagattc agatattaat gtttttgtta accctttatt tgatggctat aatgtaggag
+     4321 atcccgagta tatagaacta gaacaaatca acagaatgca tgaatttgaa atygaatctc
+     4381 cacctcagga gagcacacca atcacaagta gaatggccac tagagcgcga gatttgtaca
+     4441 acagatatgt acagcaggtc cctactagac gcgctgacat tgtaggttta actctccgcc
+     4501 catctgtgtc ccagtttgaa aatcccgcct ttgatgctga tgtcagaaat ttatttgagg
+     4561 aggatgtgga ggcgttttct aaaaatgctg attcccaggt cactccgagg ttatctgcaa
+     4621 cgcccagtgg aactgtcaga gctagtaggc tggttagaaa acctggtatg acaaccagaa
+     4681 gtgggttaga tatagggcaa agagtacatt tatattatga tattagtccc atacctaaag
+     4741 aaactatcga aatgcagcca ttgggagtaa ctagcggaga atctacttta gtagatgaat
+     4801 tagctgtttc atctatagtt aatccatttg aagaagcaat aggagatgct gatctagact
+     4861 tattagataa tttagaagaa gatttttctc gtagccaaat tattctaacg gctggtggat
+     4921 ttgaagtaga tgacatagaa gttcctacta tacccccagg agtaacattt gatatactac
+     4981 atgattcata cattaataca aatacagtaa atatggatga tactacagct ataaacattc
+     5041 catcaatagt agtaccaata gggccctcta attctgtaga aatattttat tatgattatg
+     5101 atttgcatcc ttctttaaaa cgcagaaaaa gaaaacgcaa tgtgttttaa ttttacagat
+     5161 ggccacatgg acaccaaata ctggacgttt atatttgcct cctgcacaac cagtggcgaa
+     5221 agtatattca actgatgaat atgtaatacc taccgatatt tattttcatg ctaacacaga
+     5281 acgattatta actgttggcc acccttattt tgatgtaatt gattcacaaa atcctaccaa
+     5341 aattaacgtg cctaaagttt ctggaaatca atatagagtt ctacggctaa aattaccaga
+     5401 tccaaacaag tttgcactta ttgataaaga tatctataat cctgaaagag aaaggctagt
+     5461 gtggagactg tatggtattg aaattgacag aggtggtcct ttaggtattg gttctacagg
+     5521 tcatccgttg tttaataaac tgactgatac agagaaccct tctacctatt taaaaattga
+     5581 taccaaggaa aatagattaa acatttcttg tgatcctaaa caaaatcaac tatttattgt
+     5641 tggttgtatg ccggccattg gtcagcattg ggatatagcg gaaccctgta atcctccttt
+     5701 acaagcagga ttatgccctc ctataaaact tgtgcataca cctatacaag atggtgatat
+     5761 gagtgatata ggatttggtg ctgtgaattt tagcaccttc tctgaaagca gagcagatgc
+     5821 acccttagaa ttaattaact ctattagtaa atggcctgat ttcattcaga tgtctaaaga
+     5881 catttatggt gatagaatgt tcttttttgg aaagcgtgaa caaatgtatg ccagacacaa
+     5941 tttttgtaaa gatggtgctg taggagatgc tattccagaa aatttaaatg atgatgaaaa
+     6001 tgtgcatcat agatttatgt taaatcctaa accagataca ccaccatact ctaacttagg
+     6061 aaatagtact tattttccta tgcctagtgg ctctttagtt agtagtgaga ctcagttatt
+     6121 caacaggccg ttttggttac atcgagcaca gggtaacaac aatggtatca tatggaataa
+     6181 tgatttattt gttacctttt tggataatac cagaaatact aactttctta tatctgtata
+     6241 taaggaagat ggtcctatga ataataatta tcaatatgat tctacagact ttagatattt
+     6301 tatgagacat acagaagagg ttgaggtgga aatcatttgt caactatgta aaataccttt
+     6361 agaagctgaa atactagctc atattaatgc tatgaatcct tctatactcg atcaatggca
+     6421 attagctttt gtaccttcac cgcctcaaaa tttagaggac acatatagat ttatacagtc
+     6481 tttagctact atgtgtccaa aagatgcgca acctaaacct cctgaagatc catacaaagg
+     6541 tctgacattt tggacaattg atatgtcaga ccgttttacc tcagatttgg atcagacacc
+     6601 tctaggtaaa aagtttttat atcaactagg ccaaattact ggaacagcaa aacgtatcag
+     6661 gtcaacctac agcactgtca ctccatctac aaggcgtgta acaaaacgca aacgttctcg
+     6721 cgctgcgcgc ggctaaacat tcctgtagca tgcttgtcct gtttaattta ataaatgaat
+     6781 atatgtaata aataaactat ttttctgatt cataccttat acatctgagt agtctttcct
+     6841 taagatataa atacagcgtt catagcttgt ttactattgt tgtgtggcag accagacatc
+     6901 aaactgttct aaaatactga agacgcgacc gttttcggtt gttgatttta taccagcgac
+     6961 cggtttcggt gtatttttgc cccaccactt ggaaagaggt gaacttaagg taaagtaaaa
+     7021 tttggcgacc gttactggtg ttttcttttc gcgcctttat tatggagacc gtttgtggtc
+     7081 gccaaagata gctttagggc tttaactgaa tcacgtattg gcagtaccac ttttgttact
+     7141 ggctgtatgc ctttgcaccg ggagtggttg cattcttggc agtagaatga ttgttgttaa
+     7201 caataagggt ttgatgtaaa acctaagacc gccttcggtc tataaattga gaggatttta
+     7261 a
+//
