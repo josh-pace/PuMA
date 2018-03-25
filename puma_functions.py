@@ -67,8 +67,8 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
     orfs_fh.close()
 
 
-    #blast_db = os.path.join(blast_dir, 'blast_database.txt')
-    blast_db = os.path.join(blast_dir, 'conserved.fa')
+    blast_db = os.path.join(blast_dir, 'blast_database.txt')
+    #blast_db = os.path.join(blast_dir, 'conserved.fa')
     blast_out = os.path.join(out_dir, 'blast_results.tab')
 
     if os.path.isfile(blast_out):
@@ -77,7 +77,7 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
 
     #print('BLASTing')
     cmd = blastp(query=orfs_fa,
-                 subject=blast_db,
+                 db=blast_db,
                  evalue=evalue,
                  outfmt=6,
                  out=blast_out)
@@ -142,13 +142,19 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
                         found_proteins['L1'] = [int(real_start) + 1,
                             int(end), str(L1_post).lower(), Seq(str(L1_post)).translate()]
                 else:
-                    M = re.search('M', protein_seq[seq])
-                    real_start = protein_start[start] + M.start() + M.start() + M.start()
-                    end = protein_start[start] + ((len(protein_seq[seq])+1) * 3)
-                    sequence = str(genome[int(real_start):int(end)]).lower()
-                    translated = Seq(sequence).translate()
-                    found_proteins[seq] = [int(real_start) + 1, int(end), sequence,
+                    try:
+                        #print(seq)
+                        #print(protein_start[start])
+                        #print(protein_seq[seq])
+                        M = re.search('M', protein_seq[seq])
+                        real_start = protein_start[start] + M.start() + M.start() + M.start()
+                        end = protein_start[start] + ((len(protein_seq[seq])+1) * 3)
+                        sequence = str(genome[int(real_start):int(end)]).lower()
+                        translated = Seq(sequence).translate()
+                        found_proteins[seq] = [int(real_start) + 1, int(end), sequence,
                         translated]
+                    except AttributeError:
+                        pass
 
 
 
@@ -281,7 +287,9 @@ def find_E1BS(genome, URR, URRstart, ID, out_dir):
     if not os.path.isdir(fimo_dir):
         os.makedirs(fimo_dir)
 
-    fimo_cmd = '{} --oc {} --norc --verbosity 1 --thresh 1.0E-4 --bgfile {} {} {}'
+
+
+    fimo_cmd = '{} --oc {} --norc --verbosity 1 --thresh 1.0E-1 --bgfile {} {} {}'
     cline = (fimo_cmd.format(fimo_exe, fimo_dir, 'background_model_E1BS.txt',
                              'meme_E1BS_1motif_18_21.txt', tmp))
 
@@ -409,12 +417,12 @@ def to_gff3(dict, genomelen, out_dir):
 #Output of found sequences for verification against PaVE data
 #
 
-def to_results(dict,out_dir):
+def to_results(dict):
     del dict['genome']
     del dict['accession']
     del dict['E1BS']
     del dict['E2BS']
-    del dict['URR']
+
 
     all = dict['name']
     short_name = re.search('\(([^)]+)', all).group(1)
@@ -423,11 +431,29 @@ def to_results(dict,out_dir):
     if not os.path.isdir(results_dir):
         os.makedirs(results_dir)
 
-    results = os.path.join(results_dir, '{}_genes.fa'.format(short_name))
+    results = os.path.join(results_dir, 'puma_results_test.fa'.format(
+        short_name))
 
     for protein in dict:
         if protein == 'name':
             pass
+
+        elif protein == 'URR':
+            try:
+                if type(dict[protein][3]) == int:
+                    with open(results,'a') as out_file:
+                        out_file.write(">{}, {}\n".format(dict['name'],protein))
+                        out_file.write("{}\n".format(dict[protein][4]))
+                else:
+                    with open(results,'a') as out_file:
+                        out_file.write(">{}, {}\n".format(dict['name'],protein))
+                        out_file.write("{}\n".format(dict[protein][2]))
+            except IndexError:
+                with open(results, 'a') as out_file:
+                    out_file.write(">{}, {}\n".format(dict['name'], protein))
+                    out_file.write("{}\n".format(dict[protein][2]))
+
+
         else:
             with open(results,'a') as out_file:
                 out_file.write(">{}, {} gene\n".format(dict['name'],protein))
