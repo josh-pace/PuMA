@@ -135,13 +135,13 @@ def main():
     startStop = sorted(startStop)
 
     # Putting postions in increasing order to find URR stop position
-
     for numbers in startStop:  # Finding URR stop position
         if numbers == URRstart:
             if numbers == startStop[-1]:
                 URRstop = startStop[0]
             else:
-                URRstop = startStop[numbers + 1]
+                position = startStop.index(numbers)
+                URRstop = startStop[position + 1]
 
     URRstart = int(URRstart) + 1
     URRstop = int(URRstop) - 1
@@ -207,7 +207,10 @@ def main():
     #print(virus['URR'])
 
 
-    print(virus)
+    #print(virus)
+
+    # for protein in virus:
+    #     print(protein)
 
     for name in sites:
         if name == 'E2BS':
@@ -252,8 +255,8 @@ def main():
 
 
     #to_gff3(virus,genomelen,out_dir)
-    #to_results(virus, out_dir)
-
+    #to_results(virus)
+    #print("Good")
 
     return
 
