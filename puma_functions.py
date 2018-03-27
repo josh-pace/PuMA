@@ -67,8 +67,8 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
     orfs_fh.close()
 
 
-    blast_db = os.path.join(blast_dir, 'blast_database.txt')
-    #blast_db = os.path.join(blast_dir, 'conserved.fa')
+    #blast_db = os.path.join(blast_dir, 'blast_database.txt')
+    blast_db = os.path.join(blast_dir, 'conserved.fa')
     blast_out = os.path.join(out_dir, 'blast_results.tab')
 
     if os.path.isfile(blast_out):
@@ -77,7 +77,7 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
 
     #print('BLASTing')
     cmd = blastp(query=orfs_fa,
-                 db=blast_db,
+                 subject=blast_db,
                  evalue=evalue,
                  outfmt=6,
                  out=blast_out)
@@ -244,15 +244,20 @@ def find_E2BS(genome, URR, URRstart, ID, out_dir):
 def find_E4(E2, genome):  # Finds E4
     E4 = {}  # Storing E4 information
     trans = E2[1:len(E2)].translate()  # Translates E2 nucleotide sequence
-    E4protein = max(trans.split("*"),
-                    key=len)  # Splits sequences on the stop codon, takes longest sequence
-    E4_start = re.search(str(E4protein),
-                         str(trans)).start()  # Finding the start position of E4
+    E4protein_long = str(max(trans.split("*"),
+                    key=len))  # Splits sequences on the stop codon, takes longest
+    # sequence
+    try:
+        exon, E4protein = E4protein_long.split('M',1)
+        E4protein = 'M' + E4protein
+
+    except ValueError:
+        E4protein = E4protein_long
+
+    E4_start = re.search(str(E4protein),str(trans)).start()  # Finding the start position of E4
     E4_end = re.search(str(E4protein), str(trans)).end()  # Finding the end position of E4
-    E4_nt = str(E2[(E4_start * 3) + 1:((
-                                                   E4_end + 1) * 3) + 1])  # Getting the E4 nucleotide sequence
-    E4_nt_start = re.search(E4_nt, str(
-        genome)).start()  # Finding nuceotide start position of E4
+    E4_nt = str(E2[(E4_start * 3) + 1:((E4_end + 1) * 3) + 1])  # Getting the E4 nucleotide sequence
+    E4_nt_start = re.search(E4_nt, str(genome)).start()  # Finding nuceotide start position of E4
     E4_nt_end = E4_nt_start + len(E4_nt)  # Finding nucleotide end position of E4
     sequence = str(genome[int(E4_nt_start):int(E4_nt_end)]).lower()
     translated = Seq(sequence).translate()
@@ -431,8 +436,7 @@ def to_results(dict):
     if not os.path.isdir(results_dir):
         os.makedirs(results_dir)
 
-    results = os.path.join(results_dir, 'puma_results_test.fa'.format(
-        short_name))
+    results = os.path.join(results_dir, 'puma_results_blast_subject.fa')
 
     for protein in dict:
         if protein == 'name':
