@@ -67,8 +67,8 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
     orfs_fh.close()
 
 
-    #blast_db = os.path.join(blast_dir, 'blast_database.txt')
-    blast_db = os.path.join(blast_dir, 'conserved.fa')
+    blast_db = os.path.join(blast_dir, 'blast_database.txt')
+    #blast_db = os.path.join(blast_dir, 'conserved.fa')
     blast_out = os.path.join(out_dir, 'blast_results.tab')
 
     if os.path.isfile(blast_out):
@@ -77,7 +77,7 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
 
     #print('BLASTing')
     cmd = blastp(query=orfs_fa,
-                 subject=blast_db,
+                 db=blast_db,
                  evalue=evalue,
                  outfmt=6,
                  out=blast_out)
@@ -436,7 +436,7 @@ def to_results(dict):
     if not os.path.isdir(results_dir):
         os.makedirs(results_dir)
 
-    results = os.path.join(results_dir, 'puma_results_blast_subject.fa')
+    results = os.path.join(results_dir, 'puma_results_blast_db.fa')
 
     for protein in dict:
         if protein == 'name':
