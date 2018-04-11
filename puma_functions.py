@@ -67,8 +67,7 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
     orfs_fh.close()
 
 
-    blast_db = os.path.join(blast_dir, 'blast_database.txt')
-    #blast_db = os.path.join(blast_dir, 'conserved.fa')
+    blast_db = os.path.join(blast_dir, 'conserved.fa')
     blast_out = os.path.join(out_dir, 'blast_results.tab')
 
     if os.path.isfile(blast_out):
@@ -77,7 +76,7 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
 
     #print('BLASTing')
     cmd = blastp(query=orfs_fa,
-                 db=blast_db,
+                 subject=blast_db,
                  evalue=evalue,
                  outfmt=6,
                  out=blast_out)
@@ -177,8 +176,6 @@ def find_E2BS(genome, URR, URRstart, ID, out_dir):
     # Writting URR to a file so FIMO can be used
     tmp = os.path.join(out_dir, "puma_urr.fa")
     with open(tmp, "w") as tempfile:
-        # print >> tempfile, '>URR for %s' %ID
-        # print >> tempfile, URR
         tempfile.write('>URR for {}\n'.format(ID))
         tempfile.write(str(URR))
 
@@ -192,7 +189,7 @@ def find_E2BS(genome, URR, URRstart, ID, out_dir):
     if not os.path.isdir(fimo_dir):
         os.makedirs(fimo_dir)
 
-    fimo_cmd = '{} --oc {} --norc --verbosity 1 --thresh 1.0E-3 {} {}'
+    fimo_cmd = '{} --oc {} --norc --verbosity 1 --thresh 1.0E-4 {} {}'
     cline = (fimo_cmd.format(fimo_exe, fimo_dir, 'meme_3000_TOTAL.txt', tmp))
 
     os.system(str(cline))  # Executing FIMO
@@ -240,22 +237,25 @@ def find_E2BS(genome, URR, URRstart, ID, out_dir):
 #Finds the E4 protein which is contained within the E2 protein
 #
 
-
 def find_E4(E2, genome):  # Finds E4
     E4 = {}  # Storing E4 information
-    trans = E2[1:len(E2)].translate()  # Translates E2 nucleotide sequence
-    E4protein_long = str(max(trans.split("*"),
-                    key=len))  # Splits sequences on the stop codon, takes longest
-    # sequence
-    try:
-        exon, E4protein = E4protein_long.split('M',1)
-        E4protein = 'M' + E4protein
-
-    except ValueError:
+    trans_E2 = E2[1:len(E2)].translate()  # Translates E2 nucleotide sequence
+    E4protein_long = str(max(trans_E2.split("*"),key=len))
+    #print("E4 Before:{}".format(E4protein_long))
+    # Splits sequences on the stop codon, takes longest sequence
+    if 'M' in E4protein_long:
+        M = re.search('M', E4protein_long)
+        #print("M start:{}".format(M.start()))
+        if M.start() > 41:
+            E4protein = E4protein_long
+        else:
+            E4protein_tmp = E4protein_long.split('M',1)[1]
+            E4protein = 'M' + str(E4protein_tmp)
+    else:
         E4protein = E4protein_long
-
-    E4_start = re.search(str(E4protein),str(trans)).start()  # Finding the start position of E4
-    E4_end = re.search(str(E4protein), str(trans)).end()  # Finding the end position of E4
+    #print("E4 After:{}".format(E4protein))
+    E4_start = re.search(str(E4protein),str(trans_E2)).start()#Finding the start position of E4
+    E4_end = re.search(str(E4protein), str(trans_E2)).end()#Finding the end position of E4
     E4_nt = str(E2[(E4_start * 3) + 1:((E4_end + 1) * 3) + 1])  # Getting the E4 nucleotide sequence
     E4_nt_start = re.search(E4_nt, str(genome)).start()  # Finding nuceotide start position of E4
     E4_nt_end = E4_nt_start + len(E4_nt)  # Finding nucleotide end position of E4
@@ -264,6 +264,73 @@ def find_E4(E2, genome):  # Finds E4
     E4['E4'] = [int(E4_nt_start) + 1, int(E4_nt_end), sequence, translated]  # Storing
     # all information into a dictionary
     return E4
+# --------------------------------------------------
+#
+#Finds E1^E4
+#
+def E1E4(E1_whole,E4_whole,ID,genome,out_dir):
+    E1_E4 = {}
+    genome = str(genome).lower()
+    startListE2 = []
+    E4_seq = str(E4_whole[2])
+    # Writting E4 to a file so FIMO can be used
+    tmp = os.path.join(out_dir, "puma_e2.fa")
+    with open(tmp, "w") as tempfile:
+        tempfile.write('>E2 for {}\n'.format(ID))
+        tempfile.write(str(E4_seq))
+
+    # Executing FIMO, Using URR
+    fimo_exe = find_executable('fimo')
+    if not fimo_exe:
+        print('Please install "fimo" into your $PATH')
+        return
+
+    fimo_dir = os.path.join(out_dir, 'E1^E4')
+    if not os.path.isdir(fimo_dir):
+        os.makedirs(fimo_dir)
+
+    fimo_cmd = '{} --oc {} --norc --verbosity 1 --thresh 1.0E-4 {} {}'
+    cline = (fimo_cmd.format(fimo_exe, fimo_dir, 'E1^E4_motif_8.txt', tmp))
+
+    os.system(str(cline))  # Executing FIMO
+
+    fimo_out = os.path.join(fimo_dir, 'fimo.txt')
+
+    if not os.path.isfile(fimo_out):
+        print('Failed to create fimo out "{}"'.format(fimo_out))
+        return
+
+    for column in csv.reader(open(fimo_out, "rU"),
+                             delimiter='\t'):  # Getting nucleotide start positions from FIMO output file
+        try:
+            if column[9] == 'matched_sequence':
+                startListE2 = []
+            else:
+                startListE2.append(column[9])
+        except IndexError:
+            print("No sequence found")
+
+    try:
+
+        E1_seq = str(E1_whole[2])
+        stopE1 = re.search('aggta', E1_seq).start() # Finding the splice donor site
+        stopE1 = stopE1 + 2 # Accounting for the ag that has to be apart of the sequence
+        start_E1_nt = E1_whole[0]
+        stop_E1_nt = (stopE1 - 2) + 1 + E1_whole[0]
+        start_seq = startListE2[0]  # Finding the start position of E2
+        start_E4_nt = re.search(start_seq[:-3], E4_seq).end() + E4_whole[0]
+        stop_E4_nt = E4_whole[1]
+        E1_E4_seq = str(genome[start_E1_nt-1:stop_E1_nt]+ genome[start_E4_nt-1:stop_E4_nt])
+        E1_E4_trans = Seq(E1_E4_seq).translate()[:-1]
+
+        E1_E4['E1^E4'] = [start_E1_nt,stop_E1_nt,start_E4_nt,stop_E4_nt,E1_E4_seq,E1_E4_trans]
+
+        return E1_E4
+    except IndexError:
+
+        print("No Motif found")
+        E1_E4['E1^E4']=[0,0,0,0,'No motif found']
+        return E1_E4
 # --------------------------------------------------
 
 # --------------------------------------------------
@@ -317,8 +384,10 @@ def find_E1BS(genome, URR, URRstart, ID, out_dir):
     genomestart = (startURR + URRstart)
 
 
+
     if genomestart > genomeLength:  # Case where the start of E1BS is after the end of the genome
         genomestart = genomestart - genomeLength
+
 
     genomestop = genomestart + 19
 
@@ -328,10 +397,14 @@ def find_E1BS(genome, URR, URRstart, ID, out_dir):
         E1BS['E1BS'] = [int(genomestart), int(genomeLength), 1, int(genomestop),sequence]
 
     else:
-        sequence = str(genome[int(genomestart-2):int(genomestop)]).lower()
+        if genomestart == 1:
+            sequence = str(genome[-1]).lower() + str(genome[int(genomestart - 1):int(
+                genomestop)]).lower()
+            E1BS['E1BS'] = [int(genomestart), int(genomestop), sequence]
 
-        E1BS['E1BS'] = [int(genomestart), int(genomestop),sequence]
-
+        else:
+            sequence = str(genome[int(genomestart-2):int(genomestop)]).lower()
+            E1BS['E1BS'] = [int(genomestart), int(genomestop),sequence]
     # if genomestop > genomeLength:#For printing all info
     #     genomestop = genomestop - genomeLength
     #     #print genomestop
@@ -433,10 +506,8 @@ def to_results(dict):
     short_name = re.search('\(([^)]+)', all).group(1)
 
     results_dir = os.path.join('puma_results')
-    if not os.path.isdir(results_dir):
-        os.makedirs(results_dir)
 
-    results = os.path.join(results_dir, 'puma_results_blast_db.fa')
+    results = os.path.join(results_dir, 'puma_results_E1^E4_meme_8.fa')
 
     for protein in dict:
         if protein == 'name':
@@ -457,6 +528,12 @@ def to_results(dict):
                     out_file.write(">{}, {}\n".format(dict['name'], protein))
                     out_file.write("{}\n".format(dict[protein][2]))
 
+        elif '^' in protein:
+            with open(results, 'a') as out_file:
+                out_file.write(">{}, {} gene\n".format(dict['name'], protein))
+                out_file.write("{}\n".format(dict[protein][4]))
+
+
 
         else:
             with open(results,'a') as out_file:
@@ -468,3 +545,35 @@ def to_results(dict):
     return
 
 # --------------------------------------------------
+def result_E1BS(dict):
+
+
+    results_dir = os.path.join('puma_results')
+    if not os.path.isdir(results_dir):
+        os.makedirs(results_dir)
+
+    all = dict['name']
+    short_name = re.search('\(([^)]+)', all).group(1)
+
+    results = os.path.join(results_dir, 'puma_E1BS_result.fa')
+
+    for protein in dict:
+        if protein == 'E1BS':
+            try:
+                if type(dict[protein][3]) == int:
+                    with open(results, 'a') as out_file:
+                        out_file.write(">{}\n".format(short_name))
+                        out_file.write("{}\n".format(dict[protein][4]))
+                else:
+                    with open(results, 'a') as out_file:
+                        out_file.write(">{}\n".format(short_name))
+                        out_file.write("{}\n".format(dict[protein][2]))
+            except IndexError:
+                with open(results, 'a') as out_file:
+                    out_file.write(">{}\n".format(short_name))
+                    out_file.write("{}\n".format(dict[protein][2]))
+
+
+    return
+
+

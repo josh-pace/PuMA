@@ -217,7 +217,7 @@ def main():
 
     # for protein in virus:
     #     print(protein)
-    #
+
     # for name in sites:
     #     if name == 'E2BS':
     #         print("\n{} E2 binding sites found:".format(len(virus['E2BS'])))
@@ -261,8 +261,28 @@ def main():
 
 
     #to_gff3(virus,genomelen,out_dir)
-    to_results(virus)
+    #print(virus['E1BS'])
+    #result_E1BS(virus)
+    #print(len(virus['E4'][3]))
+    E1_E4 = E1E4(virus['E1'],virus['E4'],ID,Origseq,out_dir)
+    if E1_E4['E1^E4'][4] == 'No motif found':
+        results = os.path.join('puma_results')
+        if not os.path.isdir(results):
+            os.makedirs(results)
+        wrong = os.path.join(results, 'E1^E4_no_motif.txt')
+        with open(wrong,'a') as file_out:
+            all = virus['name']
+            name = re.search('\(([^)]+)', all).group(1)
+            virus['name'] = name
+            file_out.write(virus['name'] + '\n')
+            print('Name added')
+
+    virus.update(E1_E4)
+    #to_results(virus)
+
+
     print("Good")
+
 
     return
 
