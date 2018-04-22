@@ -149,6 +149,8 @@ def main():
                 position = startStop.index(numbers)
                 URRstop = startStop[position + 1]
 
+    #print('E1:{}'.format(virus['E1']))
+
     URRstart = int(URRstart) + 1
     URRstop = int(URRstop) - 1
 
@@ -264,24 +266,49 @@ def main():
     #print(virus['E1BS'])
     #result_E1BS(virus)
     #print(len(virus['E4'][3]))
-    E1_E4 = E1E4(virus['E1'],virus['E4'],ID,Origseq,out_dir)
-    if E1_E4['E1^E4'][4] == 'No motif found':
-        results = os.path.join('puma_results')
-        if not os.path.isdir(results):
-            os.makedirs(results)
-        wrong = os.path.join(results, 'E1^E4_no_motif.txt')
-        with open(wrong,'a') as file_out:
-            all = virus['name']
-            name = re.search('\(([^)]+)', all).group(1)
-            virus['name'] = name
-            file_out.write(virus['name'] + '\n')
-            print('Name added')
+
+    E1_E4 = find_E1E4(virus['E1'],virus['E2'],virus['E4'],ID,Origseq,out_dir)
+    E8_E2 = find_E8E2(virus['E1'], virus['E2'], ID, Origseq, out_dir)
+    # if E1_E4['E1^E4'][4] == 'E8':
+    #     results = os.path.join('puma_results')
+    #     if not os.path.isdir(results):
+    #         os.makedirs(results)
+    #     wrong = os.path.join(results, 'E1^E4_problem.txt')
+    #     with open(wrong,'a') as file_out:
+    #         # all = virus['name']
+    #         # name = re.search('\(([^)]+)', all).group(1)
+    #         virus['name'] = name
+    #         file_out.write(virus['name'] + '\n')
+    #         print('Name added for E1^E4')
+    #
+    #
+    # if E8_E2['E8^E2'][4] == 'E8':
+    #
+    #     results = os.path.join('puma_results')
+    #     if not os.path.isdir(results):
+    #         os.makedirs(results)
+    #     wrong = os.path.join(results, 'E8^E2_problem.txt')
+    #     with open(wrong,'a') as file_out:
+    #         # all = virus['name']
+    #         # name = re.search('\(([^)]+)', all).group(1)
+    #         virus['name'] = name
+    #         file_out.write(virus['name'] + '\n')
+    #         print('Name added for E8^E2')
+
+
+    print(virus['URR'])
 
     virus.update(E1_E4)
+    virus.update(E8_E2)
+
+    print('E8^E2:{}'.format(virus['E8^E2']))
+    print('E1^E4:{}'.format(virus['E1^E4']))
     #to_results(virus)
+    export_to_csv(virus)
+    print('Good')
 
 
-    print("Good")
+
 
 
     return
