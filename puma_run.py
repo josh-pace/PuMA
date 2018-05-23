@@ -266,8 +266,8 @@ def main():
     #print(virus['E1BS'])
     #result_E1BS(virus)
     #print(len(virus['E4'][3]))
-
-    E1_E4 = find_E1E4(virus['E1'],virus['E2'],virus['E4'],ID,Origseq,out_dir)
+    #print('E1: {}'.format(virus['E1']))
+    #E1_E4 = find_E1E4(virus['E1'],virus['E2'],virus['E4'],ID,Origseq,out_dir)
     E8_E2 = find_E8E2(virus['E1'], virus['E2'], ID, Origseq, out_dir)
     # if E1_E4['E1^E4'][4] == 'E8':
     #     results = os.path.join('puma_results')
@@ -296,16 +296,21 @@ def main():
     #         print('Name added for E8^E2')
 
 
-    print(virus['URR'])
+    #print(virus['URR'])
 
-    virus.update(E1_E4)
+    #virus.update(E1_E4)
     virus.update(E8_E2)
 
-    print('E8^E2:{}'.format(virus['E8^E2']))
-    print('E1^E4:{}'.format(virus['E1^E4']))
+    print('E8^E2: {}'.format(virus['E8^E2']))
+    #print('E8: {}'.format(virus['E8^E2'][6]))
+    #print('E1^E4:{}'.format(virus['E1^E4']))
+    #print('E1 for E1^E4: {}'.format(virus['E1^E4'][6]))
+    #print('E1: {}'.format(virus['E1']))
     #to_results(virus)
-    export_to_csv(virus)
-    print('Good')
+    #check_E8_E1(virus,'E8')
+    #result_E1BS(virus)
+    #export_to_csv(virus)
+    #print('Good')
 
 
 

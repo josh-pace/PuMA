@@ -66,7 +66,7 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
         orfs_fh.write('\n'.join(['>' + str(orfs[orf]), orf, '']))
     orfs_fh.close()
 
-
+    #blast_db = os.path.join(blast_dir, 'blast_database.txt')
     blast_db = os.path.join(blast_dir, 'conserved.fa')
     blast_out = os.path.join(out_dir, 'blast_results.tab')
 
@@ -272,72 +272,37 @@ def find_E1E4(E1_whole,E2_whole,E4_whole,ID,genome,out_dir):
     E1_E4 = {}
     genome = str(genome).lower()
     startListE2 = []
-    E2_seq = str(E2_whole[2][571:650])
+    E2_seq = str(E2_whole[2])
     E4_seq = str(E4_whole[2])
     donor_options = ['aggta','aggtg', 'cggta','agagt']
     stopE1_options = []
-    # Writting E4 to a file so FIMO can be used
-    tmp = os.path.join(out_dir, "puma_e4.fa")
-    with open(tmp, "w") as tempfile:
-        tempfile.write('>E4 for {}\n'.format(ID))
-        tempfile.write(str(E2_seq))
-    #print(E2_seq[501:650])
-
-    # Executing FIMO, Using URR
-    fimo_exe = find_executable('fimo')
-    if not fimo_exe:
-        print('Please install "fimo" into your $PATH')
-        return
-
-    fimo_dir = os.path.join(out_dir, 'E1^E4')
-    if not os.path.isdir(fimo_dir):
-        os.makedirs(fimo_dir)
-
-    fimo_cmd = '{} --oc {} --norc --verbosity 1 --thresh 1.0E-1 {} {}'
-    cline = (fimo_cmd.format(fimo_exe, fimo_dir, 'meme_E2_split.txt', tmp))
-    #print('E1^E4')
-
-    os.system(str(cline))  # Executing FIMO
-
-    fimo_out = os.path.join(fimo_dir, 'fimo.txt')
-
-    if not os.path.isfile(fimo_out):
-        print('Failed to create fimo out "{}"'.format(fimo_out))
-        return
-
-    for column in csv.reader(open(fimo_out, "rU"),
-                             delimiter='\t'):  # Getting nucleotide start positions from FIMO output file
-        try:
-            if column[9] == 'matched_sequence':
-                startListE2 = []
-            else:
-                startListE2.append(column[9])
-        except IndexError:
-            print("No sequence found")
 
 
 
+    try:
+        E1_seq = str(E1_whole[2])
+        #print('E1_seq:{}'.format(E1_seq))
+        for sites in donor_options:
+            if sites in E1_seq:
+                stopE1_options.append(re.search(sites, E1_seq).start())# Finding the
 
-    E1_seq = str(E1_whole[2])
-    #print('E1_seq:{}'.format(E1_seq))
-    for sites in donor_options:
-        if sites in E1_seq:
-            stopE1_options.append(re.search(sites, E1_seq).start())# Finding the
+        stopE1_options = sorted(stopE1_options) #splice donor site list
+        stopE1 = stopE1_options[0]
+        stopE1 = stopE1 + 2 # Accounting for the ag that has to be apart of the sequence
+        start_E1_nt = E1_whole[0]
+        stop_E1_nt = (stopE1 - 2) + 1 + E1_whole[0]
+        start_seq = startListE2[0]# Finding the start position of E4
+        start_E4_nt = (re.search(start_seq[:-4], E2_seq).end() + E4_whole[0])
+        stop_E4_nt = E4_whole[1]
+        E1_E4_seq = str(genome[start_E1_nt-1:stop_E1_nt]+ genome[start_E4_nt-1:stop_E4_nt])
+        E1_E4_trans = Seq(E1_E4_seq).translate()[:-1]
 
-    stopE1_options = sorted(stopE1_options) #splice donor site list
-    stopE1 = stopE1_options[0]
-    stopE1 = stopE1 + 2 # Accounting for the ag that has to be apart of the sequence
-    start_E1_nt = E1_whole[0]
-    stop_E1_nt = (stopE1 - 2) + 1 + E1_whole[0]
-    start_seq = startListE2[0]# Finding the start position of E4
-    start_E4_nt = (re.search(start_seq[:-4], E2_seq).end() + E4_whole[0])
-    stop_E4_nt = E4_whole[1]
-    E1_E4_seq = str(genome[start_E1_nt-1:stop_E1_nt]+ genome[start_E4_nt-1:stop_E4_nt])
-    E1_E4_trans = Seq(E1_E4_seq).translate()[:-1]
-
-    E1_E4['E1^E4'] = [start_E1_nt,stop_E1_nt,start_E4_nt,stop_E4_nt,E1_E4_seq,E1_E4_trans]
-    return E1_E4
-
+        E1_E4['E1^E4'] = [start_E1_nt,stop_E1_nt,start_E4_nt,stop_E4_nt,E1_E4_seq,
+            E1_E4_trans, genome[start_E1_nt-1:stop_E1_nt]]
+        return E1_E4
+    except IndexError:
+        E1_E4['E1^E4'] = [0, 0, 0, 0, 'Function Crashed','',genome[start_E1_nt-1:stop_E1_nt]]
+        return E1_E4
 # --------------------------------------------------
 
 # --------------------------------------------------
@@ -351,72 +316,131 @@ def find_E8E2(E1_whole, E2_whole, ID, genome, out_dir):
     E2_seq = str(E2_whole[2])
     stopE8List = []
     genome = str(genome).lower()
+    donor_options = ['aggtg','aggtt','agaga']
 
 
-    tmp = os.path.join(out_dir, "puma_e2.fa")
-    with open(tmp, "w") as tempfile:
-        tempfile.write('>E2 for {}\n'.format(ID))
-        tempfile.write(str(E2_seq[501:630]))
+    for stop in re.finditer('aggta', E1_seq):
+        stopE8List.append(stop.start())
+    print('Looking for aggta: {}'.format(stopE8List))
+    actual = []
+    for stop in stopE8List:
+        if stop > 700 or stop < 20:
+            for sites in donor_options:
+                if sites in E1_seq:
+                    print(sites)
+                    print(re.search(sites, E1_seq).start())
+                    stopE8List.append(re.search(sites, E1_seq).start())
+            stopE8List = sorted(stopE8List)
 
-    # Executing FIMO, Using URR
-    fimo_exe = find_executable('fimo')
-    if not fimo_exe:
-        print('Please install "fimo" into your $PATH')
-        return
+    if len(stopE8List) == 0:
+        print('Length=0')
+        for sites in donor_options:
+            if sites in E1_seq:
+                stopE8List.append(re.search(sites, E1_seq).start())
+        stopE8List = sorted(stopE8List)  # splice donor site list
+        stopE8 = stopE8List[2]
 
-    fimo_dir = os.path.join(out_dir, 'E8^E2')
-    if not os.path.isdir(fimo_dir):
-        os.makedirs(fimo_dir)
-
-    fimo_cmd = '{} --oc {} --norc --verbosity 1 --thresh 1.0E-1 {} {}'
-    cline = (fimo_cmd.format(fimo_exe, fimo_dir, 'meme_E2_split.txt', tmp))
-
-    os.system(str(cline))  # Executing FIMO
-
-    fimo_out = os.path.join(fimo_dir, 'fimo.txt')
-
-    if not os.path.isfile(fimo_out):
-        print('Failed to create fimo out "{}"'.format(fimo_out))
-        return
-
-    for column in csv.reader(open(fimo_out, "rU"),
-                             delimiter='\t'):  # Getting nucleotide start positions
-        # from FIMO output file
+    else:
+        for stop in stopE8List:
+            print(stop)
+            if stop > 320 and stop < 600:
+                actual.append(stop)
+        actual = list(sorted(set(actual)))
+        print('actual: {}'.format(actual))
         try:
-            #print(column[9])
-            if column[9] == 'matched_sequence':
-                startListE2 = []
-            else:
-                startListE2.append(column[9])
-        except IndexError:
-            print("No sequence found")
-    #print('E1_seq:{}'.format(E1_seq))
-    for start in re.finditer('aggta', E1_seq):
-        stopE8List.append(start.start())
-    #print(stopE8List)
-    stopE8 = stopE8List[1] + 2  # Accounting for the ag that has to be apart of the sequence
-    startE8 = E1_seq.rfind('atg', 0, stopE8)
-    startE8_nt = startE8 + E1_whole[0]
-    stopE8_nt = (stopE8 + E1_whole[0]) - 1
-    start_seq = startListE2[0]  # Finding the start position of E2
-    startE2_nt = (re.search(start_seq[:-4], E2_seq).end() + E2_whole[0])
-    stopE2_nt = E2_whole[1]
-    E8_E2_seq = str(genome[startE8_nt - 1:stopE8_nt] + genome[startE2_nt - 1:stopE2_nt])
-    E8_E2_trans = Seq(E8_E2_seq).translate()[:-1]
+            stopE8 = actual[0]
+            stopE8_nt = (stopE8 + E1_whole[0]) + 1
+            test_string = E1_seq[:stopE8]
 
-    E8_frame = Seq(E1_seq[1:]).translate()
 
-    # if E8_E2_trans not in E8_frame:
-    #     print('Not in +1 of E1')
-    #     stopE8 = stopE8List[2] + 2
-    #     stopE8_nt = (stopE8 + E1_whole[0]) - 1
-    #     E8_E2_seq = str(genome[startE8_nt - 1:stopE8_nt] + genome[startE2_nt -
-    # 1:stopE2_nt])
-    #     E8_E2_trans = Seq(E8_E2_seq).translate()[:-1]
+            i = len(test_string)
+            pos = i
+            #print("test:{}".format(test_string[i - 3:i]))
+            E1_seq_partial = test_string
+            while (i >= 0 and i > pos - 70):
+                print('test_string:{}'.format(test_string[i - 3:i]))
+                print(pos - i - 3)
+                if test_string[i - 3:i] == 'atg':
+                    E8_seq = E1_seq_partial[i - 3:]
+                    startE8 = re.search(E8_seq, E1_seq).start()
+                    print('stop - start: {}'.format(stopE8 - startE8))
+                    if (stopE8 - startE8) + 1 >= 19:
+                        break
+                    else:
+                        if (stopE8 - startE8) + 1 >= 20:
+                            print('test_string_if:{}'.format(test_string[i - 3:i]))
+                            E8_seq = E1_seq_partial[i - 3:]
+                            startE8 = re.search(E8_seq, E1_seq).start()
+                            break
+                        else:
+                            i = i - 3
+
+                else:
+                    i = i - 3
+            startE8_nt = startE8 + E1_whole[0]
+        except UnboundLocalError:
+            stopE8 = actual[1]
+            stopE8_nt = (stopE8 + E1_whole[0]) + 1
+            test_string = E1_seq[:stopE8]
+
+            i = len(test_string)
+            pos = i
+            # print("test:{}".format(test_string[i - 3:i]))
+            E1_seq_partial = test_string
+            while (i >= 0 and i > pos - 70):
+                print('test_string:{}'.format(test_string[i - 3:i]))
+                print(pos - i - 3)
+                if test_string[i - 3:i] == 'atg':
+                    E8_seq = E1_seq_partial[i - 3:]
+                    startE8 = re.search(E8_seq, E1_seq).start()
+                    print('stop - start: {}'.format(stopE8 - startE8))
+                    if (stopE8 - startE8) + 1 >= 19:
+                        break
+                    else:
+                        if (stopE8 - startE8) + 1 >= 20:
+                            print('test_string_if:{}'.format(test_string[i - 3:i]))
+                            E8_seq = E1_seq_partial[i - 3:]
+                            startE8 = re.search(E8_seq, E1_seq).start()
+                            break
+                        else:
+                            i = i - 3
+
+                else:
+                    i = i - 3
+            startE8_nt = startE8 + E1_whole[0]
+    # print(E8_seq)
+
+
+    # print(startE8_nt)
+    E8 = genome[startE8_nt-1:stopE8_nt]
+
+    E8_E2['E8^E2'] = [startE8_nt,stopE8_nt,0,0,0,0,E8]
+    # print(stopE8_nt)
+    # start_seq = startListE2[0]  # Finding the start position of E2
+    # startE2_nt = (re.search(start_seq[:-4], E2_seq).end() + E2_whole[0]) + 1
+    # stopE2_nt = E2_whole[1]
+    # E8_E2_seq = str(genome[startE8_nt - 1:stopE8_nt] + genome[startE2_nt - 1:stopE2_nt])
+    # E8_E2_trans = Seq(E8_E2_seq).translate()[:-1]
     #
-    E8_E2['E8^E2'] = [startE8_nt, stopE8_nt, startE2_nt, stopE2_nt, E8_E2_seq,E8_E2_trans]
+    # E8_frame = Seq(E1_seq[1:]).translate()
+    #
+    # # if E8_E2_trans not in E8_frame:
+    # #     print('Not in +1 of E1')
+    # #     stopE8 = stopE8List[2] + 2
+    # #     stopE8_nt = (stopE8 + E1_whole[0]) - 1
+    # #     E8_E2_seq = str(genome[startE8_nt - 1:stopE8_nt] + genome[startE2_nt -
+    # # 1:stopE2_nt])
+    # #     E8_E2_trans = Seq(E8_E2_seq).translate()[:-1]
+    # #
+    # E8_E2['E8^E2'] = [startE8_nt, stopE8_nt, startE2_nt, stopE2_nt, E8_E2_seq,
+    #     E8_E2_trans, E8]
 
     return E8_E2
+    # except IndexError:
+    #     E8_E2['E8^E2'] = [0, 0, 0, 0, 'Function Crashed','']
+    #
+    #     return E8_E2
+
 
 # --------------------------------------------------
 #
@@ -446,7 +470,7 @@ def find_E1BS(genome, URR, URRstart, ID, out_dir):
 
 
 
-    fimo_cmd = '{} --oc {} --norc --verbosity 1 --thresh 1.0E-4 --bgfile {} {} {}'
+    fimo_cmd = '{} --oc {} --norc --verbosity 1 --thresh 1.0E-1 --bgfile {} {} {}'
     cline = (fimo_cmd.format(fimo_exe, fimo_dir, 'background_model_E1BS.txt',
                              'meme_E1BS_1motif_18_21.txt', tmp))
 
@@ -592,7 +616,7 @@ def to_results(dict):
 
     results_dir = os.path.join('puma_results')
 
-    results = os.path.join(results_dir, 'puma_results_motif_E2_splice.fa')
+    results = os.path.join(results_dir, 'puma_results_E8_E1^E4_database.fa')
 
     for protein in dict:
         if protein == 'name':
@@ -638,7 +662,8 @@ def result_E1BS(dict):
         os.makedirs(results_dir)
 
     all = dict['name']
-    short_name = re.search('\(([^)]+)', all).group(1)
+    #short_name = re.search('\(([^)]+)', all).group(1)
+    short_name = all
 
     results = os.path.join(results_dir, 'puma_E1BS_result.fa')
 
@@ -739,4 +764,4 @@ def export_to_csv(annotations):
                                      annotations[value][2], annotations[value][3]]])
 
     return
-
+# --------------------------------------------------
