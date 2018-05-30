@@ -9,6 +9,8 @@ from Bio.SeqRecord import SeqRecord
 from collections import Counter
 from Bio.Alphabet import IUPAC
 from Bio.Blast.Applications import NcbiblastpCommandline as blastp
+from Bio.Blast.Applications import NcbiblastnCommandline as blastn
+from Bio.Align.Applications import MuscleCommandline
 import os, glob, re, csv, time, operator, argparse, sys
 import warnings
 from Bio import BiopythonWarning
@@ -66,8 +68,8 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
         orfs_fh.write('\n'.join(['>' + str(orfs[orf]), orf, '']))
     orfs_fh.close()
 
-    #blast_db = os.path.join(blast_dir, 'blast_database.txt')
-    blast_db = os.path.join(blast_dir, 'conserved.fa')
+
+    blast_sub = os.path.join(blast_dir, 'conserved.fa')
     blast_out = os.path.join(out_dir, 'blast_results.tab')
 
     if os.path.isfile(blast_out):
@@ -76,7 +78,7 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
 
     #print('BLASTing')
     cmd = blastp(query=orfs_fa,
-                 subject=blast_db,
+                 subject=blast_sub,
                  evalue=evalue,
                  outfmt=6,
                  out=blast_out)
@@ -310,13 +312,25 @@ def find_E1E4(E1_whole,E2_whole,E4_whole,ID,genome,out_dir):
 #Finds E8^E2
 #
 
-def find_E8E2(E1_whole, E2_whole, ID, genome, out_dir):
+def find_E8E2(E1_whole, E2_whole, ID, genome, out_dir, blast_dir):
     E8_E2 = {}
     E1_seq = str(E1_whole[2])
     E2_seq = str(E2_whole[2])
     stopE8List = []
     genome = str(genome).lower()
     donor_options = ['aggtg','aggtt','agaga']
+
+
+
+
+
+    # test_seq = min(re.findall(r'(atg(?:(?!ag(?:gta|gtg|gtt|aga))...)*(?:ag('r'?:gta|gtg|gtt|aga)))',E1_seq),key=len)
+    #
+    # print("test:{}".format(test_seq))
+    #
+    # startE8 = (re.search(test_seq,E1_seq).start()) + E1_whole[0]
+    #
+    # print("Start E8:{}".format(startE8))
 
 
     for stop in re.finditer('aggta', E1_seq):
@@ -408,39 +422,144 @@ def find_E8E2(E1_whole, E2_whole, ID, genome, out_dir):
                 else:
                     i = i - 3
             startE8_nt = startE8 + E1_whole[0]
-    # print(E8_seq)
 
 
-    # print(startE8_nt)
-    E8 = genome[startE8_nt-1:stopE8_nt]
 
-    E8_E2['E8^E2'] = [startE8_nt,stopE8_nt,0,0,0,0,E8]
-    # print(stopE8_nt)
-    # start_seq = startListE2[0]  # Finding the start position of E2
-    # startE2_nt = (re.search(start_seq[:-4], E2_seq).end() + E2_whole[0]) + 1
-    # stopE2_nt = E2_whole[1]
-    # E8_E2_seq = str(genome[startE8_nt - 1:stopE8_nt] + genome[startE2_nt - 1:stopE2_nt])
-    # E8_E2_trans = Seq(E8_E2_seq).translate()[:-1]
-    #
-    # E8_frame = Seq(E1_seq[1:]).translate()
-    #
-    # # if E8_E2_trans not in E8_frame:
-    # #     print('Not in +1 of E1')
-    # #     stopE8 = stopE8List[2] + 2
-    # #     stopE8_nt = (stopE8 + E1_whole[0]) - 1
-    # #     E8_E2_seq = str(genome[startE8_nt - 1:stopE8_nt] + genome[startE2_nt -
-    # # 1:stopE2_nt])
-    # #     E8_E2_trans = Seq(E8_E2_seq).translate()[:-1]
-    # #
-    # E8_E2['E8^E2'] = [startE8_nt, stopE8_nt, startE2_nt, stopE2_nt, E8_E2_seq,
-    #     E8_E2_trans, E8]
+
+
+
+
+    E8 = genome[startE8_nt-1:stopE8_nt] #for testing purposes
+
+    E8_E2_seq = Seq(genome[startE8_nt-1:stopE8_nt] + genome[startE2_nt-1:stopE2_nt])
+    E8_E2_trans = E8_E2_seq.translate()
+
+    E8_E2['E8^E2'] = [startE8_nt,stopE8_nt,startE2_nt,stopE2_nt,E8_E2_seq,E8_E2_trans]
+
 
     return E8_E2
-    # except IndexError:
-    #     E8_E2['E8^E2'] = [0, 0, 0, 0, 'Function Crashed','']
-    #
-    #     return E8_E2
 
+
+
+# --------------------------------------------------
+#
+#Finds splice acceptor site for E1^E4 and E8^E2
+#Returns the start position of the splice acceptor site
+#
+
+def find_splice_acceptor( E2_whole, ID, blast_dir, out_dir):
+
+    E2_seq = E2_whole[2]
+
+    splice_acceptor_dir = os.path.join(out_dir, 'splice_acceptor')
+    if not os.path.isdir(splice_acceptor_dir):
+        os.makedirs(splice_acceptor_dir)
+
+    blast_subject = os.path.join(blast_dir, 'accession_e2_half.fa')
+
+    blast_out = os.path.join(splice_acceptor_dir, 'blast_result.tab')
+
+    if os.path.isfile(blast_out):
+        os.remove(blast_out)
+
+    query_file = os.path.join(splice_acceptor_dir, 'query.fa')
+
+    with open(query_file, 'a') as query:
+        query.write('>{}\n'.format(ID))
+        query.write(E2_seq)
+
+    cmd = blastn(query=query_file,
+                 subject=blast_subject,
+                 evalue=.001,
+                 outfmt=6,
+                 out=blast_out)
+
+    stdout, stderr = cmd()
+    if stdout:
+        print("STDOUT = ", stdout)
+    if stderr:
+        print("STDERR = ", stderr)
+
+    if not os.path.isfile(blast_out) or not os.path.getsize(blast_out):
+        print('No BLAST output "{}" (must have failed)'.format(blast_out))
+        sys.exit(1)
+
+    blast_options = []
+    with open(blast_out) as blast_file:
+        blast_result = csv.reader(blast_file, delimiter='\t')
+        for row in blast_result:
+            blast_options.append(row[1])
+
+    query = blast_options[0]
+
+    known_E2 = {}
+
+    csv_database = os.path.join(blast_dir, 'all_pave.csv')
+    with open(csv_database, 'r') as csvfile:
+        read = csv.reader(csvfile)
+        for row in read:
+            if row[0] == query and row[1] == 'E8^E2':
+                splice_acceptor_positions = row[2]
+            if row[0] == query and row[1] == 'E2':
+                known_E2[query] = str(row[3]).lower()
+            if row[0] == query and row[1] == 'CG':
+                known_CG = str(row[3]).lower()
+
+    start_E2_known = splice_acceptor_positions.split('+')[1]
+    start_E2_known = int(str(start_E2_known).split('..')[0])
+
+    # end_E2_known = splice_acceptor_positions.split('+')[1]
+    # end_E2_known = str(end_E2_known).split('..')[1]
+    # end_E2_known = int(end_E2_known.split(')')[0])
+
+    unaligned = os.path.join(splice_acceptor_dir, 'unaligned.fa')
+    aligned = os.path.join(splice_acceptor_dir, 'aligned.fa')
+
+    for key in known_E2:
+        with open(unaligned, 'a') as sequence_file:
+            sequence_file.write(">{}\n".format(ID))
+            sequence_file.write("{}\n".format(E2_seq))
+            sequence_file.write(">{}\n".format(key))
+            sequence_file.write("{}\n".format(known_E2[key]))
+
+    cline = MuscleCommandline('/Users/joshpace/muscle', input=unaligned, out=aligned,
+                              verbose=False)
+
+    stdout, stderr = cline()
+
+    if stdout:
+        print("STDOUT = ", stdout)
+    if stderr:
+        print("STDERR = ", stderr)
+
+    alignment = AlignIO.parse(aligned, 'fasta')
+
+    aligned_list = []
+    for seq_record in SeqIO.parse(aligned, 'fasta'):
+        aligned_list.append(seq_record.seq)
+        aligned_list.append(seq_record.description)  # description is name
+
+    unknown_seq = aligned_list[0].lower()
+    known_seq = str(aligned_list[2].lower())
+
+    print('should be ag:{}'.format(known_CG[start_E2_known - 3:start_E2_known - 1]))
+
+    search_seq = known_CG[start_E2_known - 1:start_E2_known + 20]
+
+    splice_acceptor_start = re.search(search_seq, known_seq).start()
+
+    print('start of splice acceptor:{}'.format(splice_acceptor_start))
+
+    print('should be ag in unkown:{}'.format(
+        unknown_seq[splice_acceptor_start - 2:splice_acceptor_start]))
+
+    if unknown_seq[splice_acceptor_start - 2:splice_acceptor_start] == 'ag':
+        startE2_nt = splice_acceptor_start + E2_whole[0]
+        print('start of E2 part of E8^E2:{}'.format(startE2_nt))
+        stopE2_nt = E2_whole[1]
+
+    return startE2_nt
+# --------------------------------------------------
 
 # --------------------------------------------------
 #

@@ -268,7 +268,11 @@ def main():
     #print(len(virus['E4'][3]))
     #print('E1: {}'.format(virus['E1']))
     #E1_E4 = find_E1E4(virus['E1'],virus['E2'],virus['E4'],ID,Origseq,out_dir)
-    E8_E2 = find_E8E2(virus['E1'], virus['E2'], ID, Origseq, out_dir)
+    #E8_E2 = find_E8E2(virus['E1'], virus['E2'], ID, Origseq, out_dir, blast_dir)
+
+    print("testing splice function:{}".format(find_splice_acceptor( virus['E2'], ID,
+                                                               blast_dir, out_dir)))
+
     # if E1_E4['E1^E4'][4] == 'E8':
     #     results = os.path.join('puma_results')
     #     if not os.path.isdir(results):
@@ -299,9 +303,9 @@ def main():
     #print(virus['URR'])
 
     #virus.update(E1_E4)
-    virus.update(E8_E2)
+    #virus.update(E8_E2)
 
-    print('E8^E2: {}'.format(virus['E8^E2']))
+    #print('E8^E2: {}'.format(virus['E8^E2']))
     #print('E8: {}'.format(virus['E8^E2'][6]))
     #print('E1^E4:{}'.format(virus['E1^E4']))
     #print('E1 for E1^E4: {}'.format(virus['E1^E4'][6]))
