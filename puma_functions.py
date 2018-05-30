@@ -496,14 +496,18 @@ def find_splice_acceptor( E2_whole, ID, blast_dir, out_dir):
 
     csv_database = os.path.join(blast_dir, 'all_pave.csv')
     with open(csv_database, 'r') as csvfile:
-        read = csv.reader(csvfile)
+        read = csv.DictReader(csvfile, fieldnames=['accession', 
+                                                   'gene',
+                                                   'positions',
+                                                   'sequence',
+                                                   'protein'])
         for row in read:
-            if row[0] == query and row[1] == 'E8^E2':
-                splice_acceptor_positions = row[2]
-            if row[0] == query and row[1] == 'E2':
-                known_E2[query] = str(row[3]).lower()
-            if row[0] == query and row[1] == 'CG':
-                known_CG = str(row[3]).lower()
+            if row['accession'] == query and row['gene'] == 'E8^E2':
+                splice_acceptor_positions = row['positions']
+            if row['accession'] == query and row['gene'] == 'E2':
+                known_E2[query] = str(row['sequence']).lower()
+            if row['accession'] == query and row['gene'] == 'CG':
+                known_CG = str(row['sequence']).lower()
 
     start_E2_known = splice_acceptor_positions.split('+')[1]
     start_E2_known = int(str(start_E2_known).split('..')[0])
