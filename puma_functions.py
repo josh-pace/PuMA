@@ -14,6 +14,8 @@ from Bio.Align.Applications import MuscleCommandline
 import os, glob, re, csv, time, operator, argparse, sys
 import warnings
 from Bio import BiopythonWarning
+import itertools
+import shutil
 
 
 # --------------------------------------------------
@@ -241,7 +243,8 @@ def find_E2BS(genome, URR, URRstart, ID, out_dir):
 
 def find_E4(E2, genome):  # Finds E4
     E4 = {}  # Storing E4 information
-    trans_E2 = E2[1:len(E2)].translate()  # Translates E2 nucleotide sequence
+
+    trans_E2 = Seq(E2[1:len(E2)]).translate()  # Translates E2 nucleotide sequence
     E4protein_long = str(max(trans_E2.split("*"),key=len))
     #print("E4 Before:{}".format(E4protein_long))
     # Splits sequences on the stop codon, takes longest sequence
@@ -263,19 +266,19 @@ def find_E4(E2, genome):  # Finds E4
     E4_nt_end = E4_nt_start + len(E4_nt)  # Finding nucleotide end position of E4
     sequence = str(genome[int(E4_nt_start):int(E4_nt_end)]).lower()
     translated = Seq(sequence).translate()
-    E4['E4'] = [int(E4_nt_start) + 1, int(E4_nt_end), sequence, translated]  # Storing
-    # all information into a dictionary
+    E4['E4'] = [int(E4_nt_start) + 1, int(E4_nt_end) + 1]  # Storing start and stop
+    # dictionary
     return E4
 # --------------------------------------------------
 #
 #Finds E1^E4
 #
-def find_E1E4(E1_whole,E2_whole,E4_whole,ID,genome,out_dir):
+def find_E1E4(E1_whole,E2_whole,ID,genome,blast_dir,out_dir):
     E1_E4 = {}
     genome = str(genome).lower()
     startListE2 = []
     E2_seq = str(E2_whole[2])
-    E4_seq = str(E4_whole[2])
+
     donor_options = ['aggta','aggtg', 'cggta','agagt']
     stopE1_options = []
 
@@ -289,21 +292,32 @@ def find_E1E4(E1_whole,E2_whole,E4_whole,ID,genome,out_dir):
                 stopE1_options.append(re.search(sites, E1_seq).start())# Finding the
 
         stopE1_options = sorted(stopE1_options) #splice donor site list
+        print('stopE1:{}'.format(stopE1_options))
         stopE1 = stopE1_options[0]
         stopE1 = stopE1 + 2 # Accounting for the ag that has to be apart of the sequence
         start_E1_nt = E1_whole[0]
         stop_E1_nt = (stopE1 - 2) + 1 + E1_whole[0]
-        start_seq = startListE2[0]# Finding the start position of E4
-        start_E4_nt = (re.search(start_seq[:-4], E2_seq).end() + E4_whole[0])
-        stop_E4_nt = E4_whole[1]
-        E1_E4_seq = str(genome[start_E1_nt-1:stop_E1_nt]+ genome[start_E4_nt-1:stop_E4_nt])
-        E1_E4_trans = Seq(E1_E4_seq).translate()[:-1]
 
-        E1_E4['E1^E4'] = [start_E1_nt,stop_E1_nt,start_E4_nt,stop_E4_nt,E1_E4_seq,
-            E1_E4_trans, genome[start_E1_nt-1:stop_E1_nt]]
+        start_E4_nt = find_splice_acceptor( E2_whole, ID, genome,blast_dir, out_dir)
+
+
+        whole_E4 = find_E4(E2_seq, genome)
+        stop_E4_nt = whole_E4['E4'][1] - 1
+
+        E1_E4_seq = str(genome[start_E1_nt-1:stop_E1_nt]+ genome[
+        start_E4_nt:stop_E4_nt])
+        E1_E4_trans = Seq(E1_E4_seq).translate()[:-1]
+        #start_seq = startListE2[0]# Finding the start position of E4
+        # start_E4_nt = (re.search(start_seq[:-4], E2_seq).end() + E4_whole[0])
+        # stop_E4_nt = E4_whole[1]
+
+
+
+        E1_E4['E1^E4'] = [start_E1_nt,stop_E1_nt,start_E4_nt + 1,stop_E4_nt,E1_E4_seq,
+            E1_E4_trans]
         return E1_E4
     except IndexError:
-        E1_E4['E1^E4'] = [0, 0, 0, 0, 'Function Crashed','',genome[start_E1_nt-1:stop_E1_nt]]
+        E1_E4['E1^E4'] = [0, 0, 0, 0, 'Function Crashed','',genome[start_E1_nt:stop_E1_nt]]
         return E1_E4
 # --------------------------------------------------
 
@@ -424,17 +438,17 @@ def find_E8E2(E1_whole, E2_whole, ID, genome, out_dir, blast_dir):
             startE8_nt = startE8 + E1_whole[0]
 
 
-
-
+    startE2_nt = find_splice_acceptor( E2_whole, ID,genome,blast_dir, out_dir)
+    stopE2_nt = E2_whole[1]
 
 
 
     E8 = genome[startE8_nt-1:stopE8_nt] #for testing purposes
 
-    E8_E2_seq = Seq(genome[startE8_nt-1:stopE8_nt] + genome[startE2_nt-1:stopE2_nt])
+    E8_E2_seq = Seq(genome[startE8_nt:stopE8_nt] + genome[startE2_nt:stopE2_nt])
     E8_E2_trans = E8_E2_seq.translate()
 
-    E8_E2['E8^E2'] = [startE8_nt,stopE8_nt,startE2_nt,stopE2_nt,E8_E2_seq,E8_E2_trans]
+    E8_E2['E8^E2'] = [startE8_nt,stopE8_nt,startE2_nt + 1,stopE2_nt,E8_E2_seq,E8_E2_trans]
 
 
     return E8_E2
@@ -447,13 +461,190 @@ def find_E8E2(E1_whole, E2_whole, ID, genome, out_dir, blast_dir):
 #Returns the start position of the splice acceptor site
 #
 
-def find_splice_acceptor( E2_whole, ID, blast_dir, out_dir):
+# def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
+#
+#     E2_seq = E2_whole[2]
+#
+#     splice_acceptor_dir = os.path.join(out_dir, 'splice_acceptor')
+#     if not os.path.isdir(splice_acceptor_dir):
+#         os.makedirs(splice_acceptor_dir)
+#
+#     blast_subject = os.path.join(blast_dir, 'accession_e2_half.fa')
+#
+#     blast_out = os.path.join(splice_acceptor_dir, 'blast_result.tab')
+#
+#     if os.path.isfile(blast_out):
+#         os.remove(blast_out)
+#
+#     query_file = os.path.join(splice_acceptor_dir, 'query.fa')
+#
+#     with open(query_file, 'a') as query:
+#         query.write('>{}\n'.format(ID))
+#         query.write(E2_seq)
+#
+#     cmd = blastn(query=query_file,
+#                  subject=blast_subject,
+#                  evalue=100,
+#                  outfmt=6,
+#                  out=blast_out)
+#
+#     stdout, stderr = cmd()
+#     if stdout:
+#         print("STDOUT = ", stdout)
+#     if stderr:
+#         print("STDERR = ", stderr)
+#
+#     if not os.path.isfile(blast_out) or not os.path.getsize(blast_out):
+#         print('No BLAST output "{}" (must have failed)'.format(blast_out))
+#         sys.exit(1)
+#
+#     blast_options = []
+#     with open(blast_out) as blast_file:
+#         blast_result = csv.reader(blast_file, delimiter='\t')
+#         for row in blast_result:
+#             blast_options.append(row[1])
+#
+#     query = blast_options[0]
+#     known_E2 = {}
+#     print("Query:{}".format(query))
+#     csv_database = os.path.join(blast_dir, 'all_pave.csv')
+#
+#     #Look into the names
+#     with open(csv_database, 'r') as csvfile:
+#         read = csv.reader(csvfile)
+#         for row in read:
+#             if row[0] == query and row[1] == 'E8^E2':
+#                 splice_acceptor_positions = row[2]
+#             if row[0] == query and row[1] == 'E2':
+#                 known_E2[query] = str(row[3]).lower()
+#                 known_E2_start = str(row[2])
+#             if row[0] == query and row[1] == 'CG':
+#                 known_CG = str(row[3]).lower()
+#
+#     splice_start_genome = splice_acceptor_positions.split('+')[1]
+#     splice_start_genome = int(str(splice_start_genome).split('..')[0])
+#
+#     known_E2_start = int(known_E2_start.split('..')[0])
+#
+#     splice_start_known = splice_start_genome - known_E2_start
+#
+#     print("splice start in {}:{}".format(query,splice_start_known))
+#     print("E2 start in {}:{}".format(query, known_E2_start))
+#
+#     print('len before alignment of known, unkown:{}, {}'.format(len(known_E2[query]),
+#                                                                     len(E2_seq)))
+#
+#     unaligned = os.path.join(splice_acceptor_dir, 'unaligned.fa')
+#     aligned = os.path.join(splice_acceptor_dir, 'aligned.fa')
+#     # if E2_seq == known_E2[query]:
+#     #     print("Seqs are same before alignment")
+#     # else:
+#     #     print("Seqs are not the same before the alignment")
+#
+#     for key in known_E2:
+#         with open(unaligned, 'a') as sequence_file:
+#             sequence_file.write(">{}\n".format(ID))
+#             sequence_file.write("{}\n".format(E2_seq))
+#             sequence_file.write(">{}\n".format(key))
+#             sequence_file.write("{}\n".format(known_E2[key]))
+#
+#     cline = MuscleCommandline(input=unaligned, out=aligned, verbose=False)
+#
+#     stdout, stderr = cline()
+#
+#     #How to output to stop printing
+#
+#
+#
+#     if stdout:
+#         print("STDOUT = ", stdout)
+#     if stderr:
+#         print("STDERR = ", stderr)
+#
+#     align_seq = []
+#     for aln in AlignIO.read(aligned, 'fasta'):
+#         align_seq.append(aln.seq)
+#
+#     unknown_seq = str(align_seq[0]).lower()
+#     known_seq = str(align_seq[1]).lower()
+#
+#     #print('Unknown:{}'.format(unknown_seq))
+#     #print("Known:{}" .format(known_seq))
+#
+#     j = 0
+#     aligned_splice_start = 0
+#
+#
+#     for position in known_seq:
+#         aligned_splice_start = aligned_splice_start + 1
+#         if position.lower() in ['a','c','t','g']:
+#             j = j + 1
+#             if j == splice_start_known:
+#                 break
+#
+#     # if known_seq == unknown_seq:
+#     #     print("Seqs are same after alignment")
+#     # else:
+#     #     print("Seqs are not the same after the alignment")
+#
+#     print('Splice start in seq:{}'.format(splice_start_known))
+#     print('splice start in unkown:{}'.format(aligned_splice_start))
+#
+#     search_seq = unknown_seq[aligned_splice_start-1:aligned_splice_start + 51].replace('-','')
+#
+#     print('len unknown_seq:{}'.format(len(unknown_seq)))
+#     print('len known_seq:{}'.format(len(known_seq)))
+#     print(len(search_seq))
+#
+#     print('Search_seq:{}'.format(search_seq))
+#     startE2_nt = (re.search(search_seq,str(genome).lower()).start()) + 2
+#
+#
+#     # print('should be ag:{}'.format(known_CG[start_E2_known - 3:start_E2_known - 1]))
+#     #
+#     # search_seq = known_CG[start_E2_known - 1:start_E2_known + 20]
+#     #
+#     # print('search_seq:{}'.format(search_seq))
+#     #
+#     # print('known_seq after alignment:{}'.format(known_seq))
+#     #
+#     # splice_acceptor_start = re.search(search_seq, known_seq).start()
+#     #
+#     #
+#     # print('start of splice acceptor:{}'.format(splice_acceptor_start))
+#     #
+#     # print('should be ag in unkown:{}'.format(
+#     #     unknown_seq[splice_acceptor_start - 2:splice_acceptor_start]))
+#     #
+#     # if unknown_seq[splice_acceptor_start - 2:splice_acceptor_start] == 'ag':
+#     #     startE2_nt = splice_acceptor_start + E2_whole[0]
+#     # else:
+#     #     startE2_nt = 'something is wrong'
+#     #     print('Something is wrong')
+#     #
+#     # print('print start of unkown E2:{}'.format(E2_whole[0]))
+#
+#     return startE2_nt
+# --------------------------------------------------
+#New version of find_splice_acceptor
+#
+def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
 
     E2_seq = E2_whole[2]
+    try:
+        if os.path.isdir(splice_acceptor_dir):
+            shutil.rmtree(splice_acceptor_dir)
+    except UnboundLocalError:
+        splice_acceptor_dir = os.path.join(out_dir, 'splice_acceptor')
+        if not os.path.isdir(splice_acceptor_dir):
+            os.makedirs(splice_acceptor_dir)
 
-    splice_acceptor_dir = os.path.join(out_dir, 'splice_acceptor')
-    if not os.path.isdir(splice_acceptor_dir):
-        os.makedirs(splice_acceptor_dir)
+
+
+    pave_wrong_dir = os.path.join('puma_results/pave_splice_wrong')
+    if not os.path.isdir(pave_wrong_dir):
+        os.makedirs(pave_wrong_dir)
+    pave_wrong = os.path.join(pave_wrong_dir, 'pave_wrong.txt')
 
     blast_subject = os.path.join(blast_dir, 'accession_e2_half.fa')
 
@@ -470,7 +661,7 @@ def find_splice_acceptor( E2_whole, ID, blast_dir, out_dir):
 
     cmd = blastn(query=query_file,
                  subject=blast_subject,
-                 evalue=.001,
+                 evalue=100,
                  outfmt=6,
                  out=blast_out)
 
@@ -489,77 +680,192 @@ def find_splice_acceptor( E2_whole, ID, blast_dir, out_dir):
         blast_result = csv.reader(blast_file, delimiter='\t')
         for row in blast_result:
             blast_options.append(row[1])
+    splice_sites = []
+    aligned_starts = []
+    for options in blast_options:
+        query = options
+        known_E2 = {}
+        print("Query:{}".format(query))
+        csv_database = os.path.join(blast_dir, 'all_pave.csv')
 
-    query = blast_options[0]
 
-    known_E2 = {}
+        with open(csv_database, 'r') as csvfile:
+            read = csv.DictReader(csvfile,('accession', 'gene', 'positions', 'seq'))
+            for row in read:
+                if row['accession'] == query and row['gene'] == 'E8^E2':
+                    splice_acceptor_positions = row['positions']
+                if row["accession"] == query and row["gene"] == 'E2':
+                    known_E2[query] = str(row['seq']).lower()
+                    known_E2_start = str(row["positions"])
+                if row['accession'] == query and row['gene'] == 'CG':
+                    known_CG = str(row['seq']).lower()
 
-    csv_database = os.path.join(blast_dir, 'all_pave.csv')
-    with open(csv_database, 'r') as csvfile:
-        read = csv.reader(csvfile)
-        for row in read:
-            if row[0] == query and row[1] == 'E8^E2':
-                splice_acceptor_positions = row[2]
-            if row[0] == query and row[1] == 'E2':
-                known_E2[query] = str(row[3]).lower()
-            if row[0] == query and row[1] == 'CG':
-                known_CG = str(row[3]).lower()
+        splice_start_genome = splice_acceptor_positions.split('+')[1]
+        splice_start_genome = int(str(splice_start_genome).split('..')[0])
 
-    start_E2_known = splice_acceptor_positions.split('+')[1]
-    start_E2_known = int(str(start_E2_known).split('..')[0])
+        known_E2_start = int(known_E2_start.split('..')[0])
 
-    # end_E2_known = splice_acceptor_positions.split('+')[1]
-    # end_E2_known = str(end_E2_known).split('..')[1]
-    # end_E2_known = int(end_E2_known.split(')')[0])
+        splice_start_known = (splice_start_genome - known_E2_start)
 
-    unaligned = os.path.join(splice_acceptor_dir, 'unaligned.fa')
-    aligned = os.path.join(splice_acceptor_dir, 'aligned.fa')
 
-    for key in known_E2:
-        with open(unaligned, 'a') as sequence_file:
-            sequence_file.write(">{}\n".format(ID))
-            sequence_file.write("{}\n".format(E2_seq))
-            sequence_file.write(">{}\n".format(key))
-            sequence_file.write("{}\n".format(known_E2[key]))
+        splice_sites.append(splice_start_known)
 
-    cline = MuscleCommandline('/Users/joshpace/muscle', input=unaligned, out=aligned,
-                              verbose=False)
+        print("splice start in {}:{}".format(query,splice_start_known))
+        print("E2 start in {}:{}".format(query, known_E2_start))
 
-    stdout, stderr = cline()
 
-    if stdout:
-        print("STDOUT = ", stdout)
-    if stderr:
-        print("STDERR = ", stderr)
+        unaligned = os.path.join(splice_acceptor_dir, 'unaligned.fa')
+        aligned = os.path.join(splice_acceptor_dir, 'aligned.fa')
 
-    alignment = AlignIO.parse(aligned, 'fasta')
+        if os.path.isfile(unaligned):
+            os.remove(unaligned)
 
-    aligned_list = []
-    for seq_record in SeqIO.parse(aligned, 'fasta'):
-        aligned_list.append(seq_record.seq)
-        aligned_list.append(seq_record.description)  # description is name
+        if os.path.isfile(aligned):
+            os.remove(aligned)
+        # if E2_seq == known_E2[query]:
+        #     print("Seqs are same before alignment")
+        # else:
+        #     print("Seqs are not the same before the alignment")
 
-    unknown_seq = aligned_list[0].lower()
-    known_seq = str(aligned_list[2].lower())
+        for key in known_E2:
+            with open(unaligned, 'a') as sequence_file:
+                sequence_file.write(">{}\n".format(ID))
+                sequence_file.write("{}\n".format(E2_seq))
+                sequence_file.write(">{}\n".format(key))
+                sequence_file.write("{}\n".format(known_E2[key]))
 
-    print('should be ag:{}'.format(known_CG[start_E2_known - 3:start_E2_known - 1]))
+        cline = MuscleCommandline(input=unaligned, out=aligned, verbose=False)
 
-    search_seq = known_CG[start_E2_known - 1:start_E2_known + 20]
+        stdout, stderr = cline()
 
-    splice_acceptor_start = re.search(search_seq, known_seq).start()
+        #How to output to stop printing
 
-    print('start of splice acceptor:{}'.format(splice_acceptor_start))
 
-    print('should be ag in unkown:{}'.format(
-        unknown_seq[splice_acceptor_start - 2:splice_acceptor_start]))
 
-    if unknown_seq[splice_acceptor_start - 2:splice_acceptor_start] == 'ag':
-        startE2_nt = splice_acceptor_start + E2_whole[0]
-        print('start of E2 part of E8^E2:{}'.format(startE2_nt))
-        stopE2_nt = E2_whole[1]
+        if stdout:
+            print("STDOUT = ", stdout)
+        if stderr:
+            print("STDERR = ", stderr)
+
+        align_seq = []
+        for aln in AlignIO.read(aligned, 'fasta'):
+            align_seq.append(aln.seq)
+
+        unknown_seq = str(align_seq[0]).lower()
+        known_seq = str(align_seq[1]).lower()
+
+        #print('Unknown:{}'.format(unknown_seq))
+        #print("Known:{}" .format(known_seq))
+
+        j = 0
+        aligned_splice_start = 0
+
+
+
+        for position in known_seq:
+            aligned_splice_start = aligned_splice_start + 1
+            if position.lower() in ['a','c','t','g']:
+                j = j + 1
+                if j == splice_start_known:
+                    break
+
+        aligned_starts.append(aligned_splice_start)
+
+
+
+
+    print('splice site start:{}'.format(splice_sites))
+    wrong = []
+    for i in range(len(splice_sites)):
+        for j in range(i + 1, len(splice_sites)):
+            if splice_sites[i] == splice_sites[j]:
+                pass
+            else:
+                wrong.append(splice_sites.index(splice_sites[i]))
+
+    wrong = list(set(wrong))
+    print('wrong:{}'.format(wrong))
+
+    with open(pave_wrong, 'a') as pave:
+        pave.write('Query:{}\n'.format(ID))
+        if len(wrong) == 0:
+            pave.write('Blast only found 1 hit:{}'.format(blast_options[0]))
+        else:
+            pave.write('PaVE possibly wrong for the following sequences:\n')
+        for options in wrong:
+            pave.write(blast_options[options] + '\n')
+            del splice_sites[options]
+            del aligned_starts[options]
+        pave.write('\n\n')
+
+
+
+    print('options after deletion:{}'.format(aligned_starts))
+
+
+
+
+    aligned_splice_start = aligned_starts[-1]
+
+
+
+    print('Splice start in seq:{}'.format(splice_start_known))
+    print('splice start in unkown(aligned):{}'.format(aligned_splice_start))
+
+    search_seq = unknown_seq[aligned_splice_start:aligned_splice_start + 50].replace('-','')
+    search_seq_long = unknown_seq[aligned_splice_start:aligned_splice_start + 50]
+    print('Search_seq:{}'.format(search_seq))
+    #print('start of -:{}'.format(re.search('-',unknown_seq).start()))
+    # i = 0
+    # while unknown_seq[aligned_splice_start-2:aligned_splice_start] != 'ag':
+    #     search_seq = unknown_seq[aligned_splice_start-i:aligned_splice_start +
+    #                                                    50].replace('-','')
+    #
+    #     i = i + 1
+
+
+
+
+
+
+    # print('len unknown_seq:{}'.format(len(unknown_seq)))
+    # print('len known_seq:{}'.format(len(known_seq)))
+    # print(len(search_seq))
+    #print('Search_seq after while loop:{}'.format(search_seq))
+
+    startE2_nt = re.search(search_seq,str(genome).lower()).start()
+
+    print(genome[startE2_nt:startE2_nt+6])
+
+    print("Start of splice site:{}".format(startE2_nt))
+
+
+    # print('should be ag:{}'.format(known_CG[start_E2_known - 3:start_E2_known - 1]))
+    #
+    # search_seq = known_CG[start_E2_known - 1:start_E2_known + 20]
+    #
+    # print('search_seq:{}'.format(search_seq))
+    #
+    # print('known_seq after alignment:{}'.format(known_seq))
+    #
+    # splice_acceptor_start = re.search(search_seq, known_seq).start()
+    #
+    #
+    # print('start of splice acceptor:{}'.format(splice_acceptor_start))
+    #
+    # print('should be ag in unkown:{}'.format(
+    #     unknown_seq[splice_acceptor_start - 2:splice_acceptor_start]))
+    #
+    # if unknown_seq[splice_acceptor_start - 2:splice_acceptor_start] == 'ag':
+    #     startE2_nt = splice_acceptor_start + E2_whole[0]
+    # else:
+    #     startE2_nt = 'something is wrong'
+    #     print('Something is wrong')
+    #
+    # print('print start of unkown E2:{}'.format(E2_whole[0]))
 
     return startE2_nt
-# --------------------------------------------------
+
 
 # --------------------------------------------------
 #
@@ -883,4 +1189,27 @@ def export_to_csv(annotations):
                                      annotations[value][2], annotations[value][3]]])
 
     return
+# --------------------------------------------------
+# --------------------------------------------------
+def check_spliced(dict):
+    results_dir = os.path.join('puma_results')
+    if not os.path.isdir(results_dir):
+        os.makedirs(results_dir)
+
+    all = dict['name']
+    #short_name = re.search('\(([^)]+)', all).group(1)
+    short_name = all
+
+    results = os.path.join(results_dir, 'puma_new_E1^E4_result.fa')
+
+    for protein in dict:
+        if protein == 'E1^E4':
+                    with open(results, 'a') as out_file:
+                        out_file.write(">{}, E1^E4 gene\n".format(short_name))
+                        out_file.write("{}\n".format(dict[protein][4]))
+
+
+
+    return
+
 # --------------------------------------------------

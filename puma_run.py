@@ -28,7 +28,7 @@ def get_args():
                         help='BLAST db directory')
 
     parser.add_argument('-o', '--outdir', metavar='DIR', type=str,
-                        default='puma-out',
+                        default=os.path.join(bin, 'puma-out'),
                         help='Output directory (default: %(default)s)')
     parser.add_argument('-e', '--evalue', metavar='FLOAT', type=float,
                         default=0.001, help='BLAST evalue')
@@ -109,6 +109,7 @@ def main():
 
     virus = {}
     # Main dictionary that will store information about proteins, URR, E2BS etc
+    check = {}
     blasted = {}
     #Stores the blasted results to find URR start and stop
 
@@ -119,6 +120,7 @@ def main():
         # Opening file and storing the genome
 
     virus['name'] = name
+    check['name'] = name
     virus['accession'] = ID
     virus['genome'] = Origseq
     # Adding name etc to dictionary
@@ -196,9 +198,9 @@ def main():
             E2Stop = virus[protein][1]
             E2seq = Origseq[E2Start - 1:E2Stop]
 
-    E4 = find_E4(E2seq, Origseq)  # Calling E4 function
 
-    virus.update(E4)  # Adding E4 to main dictionary
+
+
 
     E1BS = find_E1BS(Origseq, URRfound, URRstart, ID, out_dir)  # Calling E1BS function
 
@@ -220,46 +222,46 @@ def main():
     # for protein in virus:
     #     print(protein)
 
-    # for name in sites:
-    #     if name == 'E2BS':
-    #         print("\n{} E2 binding sites found:".format(len(virus['E2BS'])))
-    #         for i in range(0, len(virus['E2BS'])):
-    #             print('\n{} start and stop position:\n{},{}\n'.format(name,
-    #                 virus[name][i], virus[name][i] + 11))
-    #             print('{} sequnce:\n{}\n'.format(name, str(virus['genome'][virus['E2BS'][i]
-    #                                                 - 1:virus['E2BS'][i] + 11]).lower()))
-    #     elif name == 'E1BS':
-    #         if type(virus[name][2]) == int:
-    #             print('\n{} start and stop position:\n{},{},{},{}\n'.format(name, virus
-    #             [name][0], virus[name][1], virus[name][2], virus[name][3]))
-    #             print('{} seqeunce:\n{}\n'.format(name, virus[name][4]))
-    #         else:
-    #             print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
-    #                                                                   , virus[name][1]))
-    #             print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
-    #     else:
-    #         try:
-    #             if type(virus[name][3]) == int:
-    #                 print('\n{} start and stop position:\n{},{},{},{}\n'.format(name, virus
-    #                       [name][0], virus[name][1], virus[name][2], virus[name][3]))
-    #                 print('{} seqeunce:\n{}\n'.format(name, virus[name][4]))
-    #                 if name != 'URR':
-    #                     print('{} translated sequnce:\n{}\n'.format(name, virus[name][
-    #                         5][:-1]))
-    #             else:
-    #                 print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
-    #                                                                   , virus[name][1]))
-    #                 print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
-    #                 if name != 'URR':
-    #                     print('{} translated seqeunce:\n{}\n'.format(name, virus[name][
-    #                         3][:-1]))
-    #         except IndexError:
-    #             print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
-    #                                                                   , virus[name][1]))
-    #             print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
-    #             if name != 'URR':
-    #                 print('{} translated seqeunce:\n{}\n'.format(name, virus[name][
-    #                     3][:-1]))
+    for name in sites:
+        if name == 'E2BS':
+            print("\n{} E2 binding sites found:".format(len(virus['E2BS'])))
+            for i in range(0, len(virus['E2BS'])):
+                print('\n{} start and stop position:\n{},{}\n'.format(name,
+                    virus[name][i], virus[name][i] + 11))
+                print('{} sequnce:\n{}\n'.format(name, str(virus['genome'][virus['E2BS'][i]
+                                                    - 1:virus['E2BS'][i] + 11]).lower()))
+        elif name == 'E1BS':
+            if type(virus[name][2]) == int:
+                print('\n{} start and stop position:\n{},{},{},{}\n'.format(name, virus
+                [name][0], virus[name][1], virus[name][2], virus[name][3]))
+                print('{} seqeunce:\n{}\n'.format(name, virus[name][4]))
+            else:
+                print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
+                                                                      , virus[name][1]))
+                print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
+        else:
+            try:
+                if type(virus[name][3]) == int:
+                    print('\n{} start and stop position:\n{},{},{},{}\n'.format(name, virus
+                          [name][0], virus[name][1], virus[name][2], virus[name][3]))
+                    print('{} seqeunce:\n{}\n'.format(name, virus[name][4]))
+                    if name != 'URR':
+                        print('{} translated sequnce:\n{}\n'.format(name, virus[name][
+                            5][:-1]))
+                else:
+                    print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
+                                                                      , virus[name][1]))
+                    print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
+                    if name != 'URR':
+                        print('{} translated seqeunce:\n{}\n'.format(name, virus[name][
+                            3][:-1]))
+            except IndexError:
+                print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
+                                                                      , virus[name][1]))
+                print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
+                if name != 'URR':
+                    print('{} translated seqeunce:\n{}\n'.format(name, virus[name][
+                        3][:-1]))
 
 
     #to_gff3(virus,genomelen,out_dir)
@@ -267,12 +269,28 @@ def main():
     #result_E1BS(virus)
     #print(len(virus['E4'][3]))
     #print('E1: {}'.format(virus['E1']))
-    #E1_E4 = find_E1E4(virus['E1'],virus['E2'],virus['E4'],ID,Origseq,out_dir)
-    #E8_E2 = find_E8E2(virus['E1'], virus['E2'], ID, Origseq, out_dir, blast_dir)
+    E1_E4 = find_E1E4(virus['E1'],virus['E2'],ID,Origseq,blast_dir,out_dir)
 
-    print("testing splice function:{}".format(find_splice_acceptor( virus['E2'], ID,
-                                                               blast_dir, out_dir)))
+    print(E1_E4)
 
+    real = "atggcggacaaggaccataaagctcttcgccgccatctggaagcagggtatcccttctgccctccgacaccacatccctccagccctcgtccagcgtctccaccacacaaaaacgatacgcacgaaccggatctagccctacagccaccgcccggcggcagaggaaaagagaaagacaagaaggagacggagaaggaacgcaggcgacatcgagacaacgtgtcagatcaagatcaagaagctccagcagagggaggaggcaagaaacctcagtcaaacgagggaaagggcgaggaggagggtcacgagggagaagagaacccacccaacgagacacctcctccaggggagggagaagtagaaggcggccccaaacacggtccaggtccagatcaagagggtcttctaatgagcgtggcctcttgccttcagaagtgggaagatcagtacaatcagttggttcaaaacatcttggtagacttgagcgattattggaagaggctgcagatcccccagtaa"
+    test = E1_E4['E1^E4'][4]
+
+    if real == test:
+        print('PaVE matches PuMA for {}!'.format(virus['name']))
+    else:
+        print('NO they are not the same')
+
+    #check.update(E1_E4)
+
+
+    #check_spliced(check)
+    E8_E2 = find_E8E2(virus['E1'], virus['E2'], ID, Origseq, out_dir, blast_dir)
+    print(E8_E2)
+
+    #test = find_splice_acceptor(virus['E2'], ID,Origseq,blast_dir, out_dir)
+
+    #print(test)
     # if E1_E4['E1^E4'][4] == 'E8':
     #     results = os.path.join('puma_results')
     #     if not os.path.isdir(results):
@@ -309,7 +327,8 @@ def main():
     #print('E8: {}'.format(virus['E8^E2'][6]))
     #print('E1^E4:{}'.format(virus['E1^E4']))
     #print('E1 for E1^E4: {}'.format(virus['E1^E4'][6]))
-    #print('E1: {}'.format(virus['E1']))
+    print('E1: {}'.format(virus['E1']))
+    print('E2:{}'.format(virus['E2']))
     #to_results(virus)
     #check_E8_E1(virus,'E8')
     #result_E1BS(virus)
