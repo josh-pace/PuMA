@@ -14,16 +14,5 @@ Please install the following:
 * BioPython
 * NCBI BLAST+ 2.7.x
 * MEME, FIMO (http://meme-suite.org/)
+* MUSCLE (https://www.drive5.com/muscle/)
 
-# To run:
-
-## Make BLAST db
-
-Run `make` in "blast_database":
-
-    $ (cd blast_database && make)
-   
-
-Then type:
-
-    $ make e2bs
