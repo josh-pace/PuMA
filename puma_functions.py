@@ -742,10 +742,10 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
 
 
 
-        if stdout:
-            print("STDOUT = ", stdout)
-        if stderr:
-            print("STDERR = ", stderr)
+        # if stdout:
+        #     print("STDOUT = ", stdout)
+        # if stderr:
+        #     print("STDERR = ", stderr)
 
         align_seq = []
         for aln in AlignIO.read(aligned, 'fasta'):
