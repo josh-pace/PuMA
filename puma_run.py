@@ -31,7 +31,7 @@ def get_args():
                         default=os.path.join(bin, 'puma-out'),
                         help='Output directory (default: %(default)s)')
     parser.add_argument('-e', '--evalue', metavar='FLOAT', type=float,
-                        default=0.001, help='BLAST evalue')
+                        default=0.00001, help='BLAST evalue')
 
     parser.add_argument('-m', '--min_prot_len', metavar='NUM', type=int,
                         default=25,
@@ -157,6 +157,7 @@ def main():
     URRstop = int(URRstop) - 1
 
     genomelen = int(len(Origseq))
+    print('Len:{}'.format(genomelen))
 
     if URRstop == 0:
         URRstop = genomelen
@@ -206,6 +207,24 @@ def main():
 
     virus.update(E1BS)  # Adding E1BS to main dictionary
 
+    E1_E4 = find_E1E4(virus['E1'],virus['E2'],ID,Origseq,blast_dir,out_dir)
+
+    E8_E2 = find_E8E2(virus['E1'], virus['E2'], ID, Origseq, out_dir, blast_dir)
+    print("E1^E4:{}".format(E1_E4))
+    print("E8^E2:{}".format(E8_E2))
+    if E8_E2['E8^E2'] == False:
+        #print("Inside E8^E2 if")
+        pass
+    else:
+        virus.update(E8_E2)
+    if E1_E4['E1^E4'] == False:
+        #print("Inside E1^E4 if")
+        pass
+    else:
+        virus.update(E1_E4)
+
+
+
     if sites[0] == 'ALL':
         sites = {}
         sites.update(virus)
@@ -219,8 +238,8 @@ def main():
 
     #print(virus)
 
-    # for protein in virus:
-    #     print(protein)
+    for protein in virus:
+        print(protein)
 
     for name in sites:
         if name == 'E2BS':
@@ -256,6 +275,7 @@ def main():
                         print('{} translated seqeunce:\n{}\n'.format(name, virus[name][
                             3][:-1]))
             except IndexError:
+                print('Line 275:{}'.format(virus[name]))
                 print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
                                                                       , virus[name][1]))
                 print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
@@ -269,24 +289,24 @@ def main():
     #result_E1BS(virus)
     #print(len(virus['E4'][3]))
     #print('E1: {}'.format(virus['E1']))
-    E1_E4 = find_E1E4(virus['E1'],virus['E2'],ID,Origseq,blast_dir,out_dir)
-
-    print(E1_E4)
-
-    real = "atggcggacaaggaccataaagctcttcgccgccatctggaagcagggtatcccttctgccctccgacaccacatccctccagccctcgtccagcgtctccaccacacaaaaacgatacgcacgaaccggatctagccctacagccaccgcccggcggcagaggaaaagagaaagacaagaaggagacggagaaggaacgcaggcgacatcgagacaacgtgtcagatcaagatcaagaagctccagcagagggaggaggcaagaaacctcagtcaaacgagggaaagggcgaggaggagggtcacgagggagaagagaacccacccaacgagacacctcctccaggggagggagaagtagaaggcggccccaaacacggtccaggtccagatcaagagggtcttctaatgagcgtggcctcttgccttcagaagtgggaagatcagtacaatcagttggttcaaaacatcttggtagacttgagcgattattggaagaggctgcagatcccccagtaa"
-    test = E1_E4['E1^E4'][4]
-
-    if real == test:
-        print('PaVE matches PuMA for {}!'.format(virus['name']))
-    else:
-        print('NO they are not the same')
+    # E1_E4 = find_E1E4(virus['E1'],virus['E2'],ID,Origseq,blast_dir,out_dir)
+    #
+    # print(E1_E4)
+    #
+    # real = "atggcggacaaggaccataaagctcttcgccgccatctggaagcagggtatcccttctgccctccgacaccacatccctccagccctcgtccagcgtctccaccacacaaaaacgatacgcacgaaccggatctagccctacagccaccgcccggcggcagaggaaaagagaaagacaagaaggagacggagaaggaacgcaggcgacatcgagacaacgtgtcagatcaagatcaagaagctccagcagagggaggaggcaagaaacctcagtcaaacgagggaaagggcgaggaggagggtcacgagggagaagagaacccacccaacgagacacctcctccaggggagggagaagtagaaggcggccccaaacacggtccaggtccagatcaagagggtcttctaatgagcgtggcctcttgccttcagaagtgggaagatcagtacaatcagttggttcaaaacatcttggtagacttgagcgattattggaagaggctgcagatcccccagtaa"
+    # test = E1_E4['E1^E4'][4]
+    #
+    # if real == test:
+    #     print('PaVE matches PuMA for {}!'.format(virus['name']))
+    # else:
+    #     print('NO they are not the same')
 
     #check.update(E1_E4)
 
 
     #check_spliced(check)
-    E8_E2 = find_E8E2(virus['E1'], virus['E2'], ID, Origseq, out_dir, blast_dir)
-    print(E8_E2)
+    # E8_E2 = find_E8E2(virus['E1'], virus['E2'], ID, Origseq, out_dir, blast_dir)
+    # print("E8_E2:{}".format(E8_E2))
 
     #test = find_splice_acceptor(virus['E2'], ID,Origseq,blast_dir, out_dir)
 
@@ -320,20 +340,21 @@ def main():
 
     #print(virus['URR'])
 
-    #virus.update(E1_E4)
-    #virus.update(E8_E2)
 
     #print('E8^E2: {}'.format(virus['E8^E2']))
     #print('E8: {}'.format(virus['E8^E2'][6]))
     #print('E1^E4:{}'.format(virus['E1^E4']))
     #print('E1 for E1^E4: {}'.format(virus['E1^E4'][6]))
-    print('E1: {}'.format(virus['E1']))
-    print('E2:{}'.format(virus['E2']))
+    #print('E1: {}'.format(virus['E1']))
+    #print('E2:{}'.format(virus['E2']))
     #to_results(virus)
     #check_E8_E1(virus,'E8')
     #result_E1BS(virus)
     #export_to_csv(virus)
-    #print('Good')
+    #print('Information should be in file')
+
+    # for name in virus:
+    #     print(name)
 
 
 
