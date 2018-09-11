@@ -71,7 +71,7 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
     orfs_fh.close()
 
 
-    blast_sub = os.path.join(blast_dir, 'conserved.fa')
+    blast_sub = os.path.join(blast_dir, 'conserved_test_E5.fa')
     blast_out = os.path.join(out_dir, 'blast_results.tab')
 
     if os.path.isfile(blast_out):
@@ -299,23 +299,26 @@ def find_E1E4(E1_whole,E2_whole,ID,genome,blast_dir,out_dir):
         stop_E1_nt = (stopE1 - 2) + 1 + E1_whole[0]
 
         start_E4_nt = find_splice_acceptor( E2_whole, ID, genome,blast_dir, out_dir)
+        if start_E4_nt == False:
+            E1_E4['E1^E4'] = False
+            return E1_E4
+        else:
+
+            whole_E4 = find_E4(E2_seq, genome)
+            stop_E4_nt = whole_E4['E4'][1] - 1
+
+            E1_E4_seq = str(genome[start_E1_nt-1:stop_E1_nt]+ genome[
+            start_E4_nt:stop_E4_nt])
+            E1_E4_trans = Seq(E1_E4_seq).translate()[:-1]
+            #start_seq = startListE2[0]# Finding the start position of E4
+            # start_E4_nt = (re.search(start_seq[:-4], E2_seq).end() + E4_whole[0])
+            # stop_E4_nt = E4_whole[1]
 
 
-        whole_E4 = find_E4(E2_seq, genome)
-        stop_E4_nt = whole_E4['E4'][1] - 1
 
-        E1_E4_seq = str(genome[start_E1_nt-1:stop_E1_nt]+ genome[
-        start_E4_nt:stop_E4_nt])
-        E1_E4_trans = Seq(E1_E4_seq).translate()[:-1]
-        #start_seq = startListE2[0]# Finding the start position of E4
-        # start_E4_nt = (re.search(start_seq[:-4], E2_seq).end() + E4_whole[0])
-        # stop_E4_nt = E4_whole[1]
-
-
-
-        E1_E4['E1^E4'] = [start_E1_nt,stop_E1_nt,start_E4_nt + 1,stop_E4_nt,E1_E4_seq,
-            E1_E4_trans]
-        return E1_E4
+            E1_E4['E1^E4'] = [start_E1_nt,stop_E1_nt,start_E4_nt + 1,stop_E4_nt,E1_E4_seq,
+                E1_E4_trans]
+            return E1_E4
     except IndexError:
         E1_E4['E1^E4'] = [0, 0, 0, 0, 'Function Crashed','',genome[start_E1_nt:stop_E1_nt]]
         return E1_E4
@@ -334,6 +337,13 @@ def find_E8E2(E1_whole, E2_whole, ID, genome, out_dir, blast_dir):
     genome = str(genome).lower()
     donor_options = ['aggtg','aggtt','agaga']
 
+    startE2_nt = find_splice_acceptor(E2_whole, ID, genome, blast_dir, out_dir)
+
+    if startE2_nt == False:
+
+        E8_E2['E8^E2'] = False
+        return E8_E2
+
 
 
 
@@ -349,109 +359,122 @@ def find_E8E2(E1_whole, E2_whole, ID, genome, out_dir, blast_dir):
 
     for stop in re.finditer('aggta', E1_seq):
         stopE8List.append(stop.start())
-    print('Looking for aggta: {}'.format(stopE8List))
+    #print('Looking for aggta: {}'.format(stopE8List))
     actual = []
     for stop in stopE8List:
         if stop > 700 or stop < 20:
             for sites in donor_options:
                 if sites in E1_seq:
-                    print(sites)
-                    print(re.search(sites, E1_seq).start())
+                    #print(sites)
+                    #print(re.search(sites, E1_seq).start())
                     stopE8List.append(re.search(sites, E1_seq).start())
             stopE8List = sorted(stopE8List)
+    #print('stopE8 options:{}'.format(stopE8List))
 
     if len(stopE8List) == 0:
-        print('Length=0')
+        #print('Length=0')
         for sites in donor_options:
             if sites in E1_seq:
                 stopE8List.append(re.search(sites, E1_seq).start())
         stopE8List = sorted(stopE8List)  # splice donor site list
-        stopE8 = stopE8List[2]
+        stopE8 = stopE8List[0]
 
     else:
         for stop in stopE8List:
-            print(stop)
-            if stop > 320 and stop < 600:
+            #print(stop)
+            if stop > 325 and stop < 600:
                 actual.append(stop)
         actual = list(sorted(set(actual)))
-        print('actual: {}'.format(actual))
-        try:
-            stopE8 = actual[0]
-            stopE8_nt = (stopE8 + E1_whole[0]) + 1
-            test_string = E1_seq[:stopE8]
+        if len(actual) == 0:
+            print('Worked')
+            E8_E2['E8^E2'] = False
+            return E8_E2
+        else:
+            print('actual: {}'.format(actual))
+            for position in actual:
+                print('position:{}'.format(position))
+                try:
+                    stopE8 = position
+                    stopE8_nt = (stopE8 + E1_whole[0]) + 1
+                    test_string = E1_seq[:stopE8]
 
 
-            i = len(test_string)
-            pos = i
-            #print("test:{}".format(test_string[i - 3:i]))
-            E1_seq_partial = test_string
-            while (i >= 0 and i > pos - 70):
-                print('test_string:{}'.format(test_string[i - 3:i]))
-                print(pos - i - 3)
-                if test_string[i - 3:i] == 'atg':
-                    E8_seq = E1_seq_partial[i - 3:]
-                    startE8 = re.search(E8_seq, E1_seq).start()
-                    print('stop - start: {}'.format(stopE8 - startE8))
-                    if (stopE8 - startE8) + 1 >= 19:
-                        break
-                    else:
-                        if (stopE8 - startE8) + 1 >= 20:
-                            print('test_string_if:{}'.format(test_string[i - 3:i]))
+                    i = len(test_string)
+                    pos = i
+                    #print("test:{}".format(test_string[i - 3:i]))
+                    E1_seq_partial = test_string
+                    while (i >= 0 and i > pos - 70):
+                        print('test_string:{}'.format(test_string[i - 3:i]))
+                        print(pos - i - 3)
+                        if test_string[i - 3:i] == 'atg':
                             E8_seq = E1_seq_partial[i - 3:]
                             startE8 = re.search(E8_seq, E1_seq).start()
-                            break
+                            print('stop - start: {}'.format(stopE8 - startE8))
+                            if (stopE8 - startE8) + 1 >= 19:
+                                break
+                            else:
+                                if (stopE8 - startE8) + 1 >= 20:
+                                    print('test_string_if:{}'.format(test_string[i - 3:i]))
+                                    E8_seq = E1_seq_partial[i - 3:]
+                                    startE8 = re.search(E8_seq, E1_seq).start()
+                                    break
+                                else:
+                                    i = i - 3
+
                         else:
                             i = i - 3
-
-                else:
-                    i = i - 3
-            startE8_nt = startE8 + E1_whole[0]
-        except UnboundLocalError:
-            stopE8 = actual[1]
-            stopE8_nt = (stopE8 + E1_whole[0]) + 1
-            test_string = E1_seq[:stopE8]
-
-            i = len(test_string)
-            pos = i
-            # print("test:{}".format(test_string[i - 3:i]))
-            E1_seq_partial = test_string
-            while (i >= 0 and i > pos - 70):
-                print('test_string:{}'.format(test_string[i - 3:i]))
-                print(pos - i - 3)
-                if test_string[i - 3:i] == 'atg':
-                    E8_seq = E1_seq_partial[i - 3:]
-                    startE8 = re.search(E8_seq, E1_seq).start()
-                    print('stop - start: {}'.format(stopE8 - startE8))
-                    if (stopE8 - startE8) + 1 >= 19:
-                        break
-                    else:
-                        if (stopE8 - startE8) + 1 >= 20:
-                            print('test_string_if:{}'.format(test_string[i - 3:i]))
-                            E8_seq = E1_seq_partial[i - 3:]
-                            startE8 = re.search(E8_seq, E1_seq).start()
-                            break
-                        else:
-                            i = i - 3
-
-                else:
-                    i = i - 3
-            startE8_nt = startE8 + E1_whole[0]
-
-
-    startE2_nt = find_splice_acceptor( E2_whole, ID,genome,blast_dir, out_dir)
-    stopE2_nt = E2_whole[1]
+                    startE8_nt = startE8 + E1_whole[0]
+                except UnboundLocalError:
+                    print("CHECK E8")
+                    startE8 = 0
+                    # stopE8 = actual[1]
+                    # stopE8_nt = (stopE8 + E1_whole[0]) + 1
+                    # test_string = E1_seq[:stopE8]
+                    #
+                    # i = len(test_string)
+                    # pos = i
+                    # # print("test:{}".format(test_string[i - 3:i]))
+                    # E1_seq_partial = test_string
+                    # while (i >= 0 and i > pos - 70):
+                    #     # print('test_string:{}'.format(test_string[i - 3:i]))
+                    #     # print(pos - i - 3)
+                    #     if test_string[i - 3:i] == 'atg':
+                    #         E8_seq = E1_seq_partial[i - 3:]
+                    #         startE8 = re.search(E8_seq, E1_seq).start()
+                    #         print('stop - start: {}'.format(stopE8 - startE8))
+                    #         if (stopE8 - startE8) + 1 >= 19:
+                    #             break
+                    #         else:
+                    #             if (stopE8 - startE8) + 1 >= 20:
+                    #                 print('test_string_if:{}'.format(test_string[i - 3:i]))
+                    #                 E8_seq = E1_seq_partial[i - 3:]
+                    #                 startE8 = re.search(E8_seq, E1_seq).start()
+                    #                 break
+                    #             else:
+                    #                 i = i - 3
+                    #
+                    #     else:
+                    #         i = i - 3
+                    startE8_nt = startE8 + E1_whole[0]
 
 
+        if startE2_nt != False:
+            stopE2_nt = E2_whole[1]
 
-    E8 = genome[startE8_nt-1:stopE8_nt] #for testing purposes
+            E8_E2_seq = Seq(genome[startE8_nt-1:stopE8_nt] + genome[
+            startE2_nt:stopE2_nt])
+            E8_E2_trans = E8_E2_seq.translate()
 
-    E8_E2_seq = Seq(genome[startE8_nt:stopE8_nt] + genome[startE2_nt:stopE2_nt])
-    E8_E2_trans = E8_E2_seq.translate()
+            # E8 = genome[startE8_nt - 1:stopE8_nt]  # for testing purposes
+            # print('E8_seq:{}'.format(E8))
+            # print('E8_start:{}'.format(startE8_nt))
+            # print('E8_stop:{}'.format(stopE8_nt))
 
-    E8_E2['E8^E2'] = [startE8_nt,stopE8_nt,startE2_nt + 1,stopE2_nt,E8_E2_seq,E8_E2_trans]
+            E8_E2['E8^E2'] = [startE8_nt,stopE8_nt,startE2_nt + 1,stopE2_nt,E8_E2_seq,
+            E8_E2_trans]
 
 
-    return E8_E2
+            return E8_E2
 
 
 
@@ -646,8 +669,8 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
         os.makedirs(pave_wrong_dir)
     pave_wrong = os.path.join(pave_wrong_dir, 'pave_wrong.txt')
 
-    blast_subject = os.path.join(blast_dir, 'accession_e2_half.fa')
-
+    blast_subject = os.path.join(blast_dir, 'accession_e2.fa')
+    #blast_db = os.path.join(blast_dir,'accession_e2_half.fa')
     blast_out = os.path.join(splice_acceptor_dir, 'blast_result.tab')
 
     if os.path.isfile(blast_out):
@@ -655,6 +678,7 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
 
     query_file = os.path.join(splice_acceptor_dir, 'query.fa')
 
+    #print("ID:{} E2_Seq:{}".format(ID, E2_seq))
     with open(query_file, 'a') as query:
         query.write('>{}\n'.format(ID))
         query.write(E2_seq)
@@ -673,7 +697,8 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
 
     if not os.path.isfile(blast_out) or not os.path.getsize(blast_out):
         print('No BLAST output "{}" (must have failed)'.format(blast_out))
-        sys.exit(1)
+        startE2_nt = 15
+        return startE2_nt
 
     blast_options = []
     with open(blast_out) as blast_file:
@@ -685,7 +710,7 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
     for options in blast_options:
         query = options
         known_E2 = {}
-        print("Query:{}".format(query))
+        #print("Query:{}".format(query))
         csv_database = os.path.join(blast_dir, 'all_pave.csv')
 
 
@@ -700,18 +725,27 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
                 if row['accession'] == query and row['gene'] == 'CG':
                     known_CG = str(row['seq']).lower()
 
-        splice_start_genome = splice_acceptor_positions.split('+')[1]
-        splice_start_genome = int(str(splice_start_genome).split('..')[0])
+        try:
+            splice_start_genome = splice_acceptor_positions.split('+')[1]
 
-        known_E2_start = int(known_E2_start.split('..')[0])
+            splice_start_genome = int(str(splice_start_genome).split('..')[0])
 
-        splice_start_known = (splice_start_genome - known_E2_start)
+            known_E2_start = int(known_E2_start.split('..')[0])
+
+            splice_start_known = (splice_start_genome - known_E2_start)
+
+            splice_sites.append(splice_start_known)
+
+        except UnboundLocalError:
+            print('Query does not have E1^E4 or E8^E2')
+            startE2_nt = False
+            return startE2_nt
 
 
-        splice_sites.append(splice_start_known)
 
-        print("splice start in {}:{}".format(query,splice_start_known))
-        print("E2 start in {}:{}".format(query, known_E2_start))
+
+        # print("splice start in {}:{}".format(query,splice_start_known))
+        # print("E2 start in {}:{}".format(query, known_E2_start))
 
 
         unaligned = os.path.join(splice_acceptor_dir, 'unaligned.fa')
@@ -774,7 +808,7 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
 
 
 
-    print('splice site start:{}'.format(splice_sites))
+    #print('splice site start:{}'.format(splice_sites))
     wrong = []
     for i in range(len(splice_sites)):
         for j in range(i + 1, len(splice_sites)):
@@ -784,7 +818,7 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
                 wrong.append(splice_sites.index(splice_sites[i]))
 
     wrong = list(set(wrong))
-    print('wrong:{}'.format(wrong))
+    #print('wrong:{}'.format(wrong))
 
     with open(pave_wrong, 'a') as pave:
         pave.write('Query:{}\n'.format(ID))
@@ -800,7 +834,7 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
 
 
 
-    print('options after deletion:{}'.format(aligned_starts))
+    #print('options after deletion:{}'.format(aligned_starts))
 
 
 
@@ -809,12 +843,12 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
 
 
 
-    print('Splice start in seq:{}'.format(splice_start_known))
-    print('splice start in unkown(aligned):{}'.format(aligned_splice_start))
+    # print('Splice start in seq:{}'.format(splice_start_known))
+    # print('splice start in unkown(aligned):{}'.format(aligned_splice_start))
 
     search_seq = unknown_seq[aligned_splice_start:aligned_splice_start + 50].replace('-','')
     search_seq_long = unknown_seq[aligned_splice_start:aligned_splice_start + 50]
-    print('Search_seq:{}'.format(search_seq))
+    #print('Search_seq:{}'.format(search_seq))
     #print('start of -:{}'.format(re.search('-',unknown_seq).start()))
     # i = 0
     # while unknown_seq[aligned_splice_start-2:aligned_splice_start] != 'ag':
@@ -835,9 +869,9 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
 
     startE2_nt = re.search(search_seq,str(genome).lower()).start()
 
-    print(genome[startE2_nt:startE2_nt+6])
-
-    print("Start of splice site:{}".format(startE2_nt))
+    # print(genome[startE2_nt:startE2_nt+6])
+    #
+    # print("Start of splice site:{}".format(startE2_nt))
 
 
     # print('should be ag:{}'.format(known_CG[start_E2_known - 3:start_E2_known - 1]))
@@ -1041,7 +1075,7 @@ def to_results(dict):
 
     results_dir = os.path.join('puma_results')
 
-    results = os.path.join(results_dir, 'puma_results_E8_E1^E4_database.fa')
+    results = os.path.join(results_dir, 'puma_results_09_10_18.fa')
 
     for protein in dict:
         if protein == 'name':
