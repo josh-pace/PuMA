@@ -273,7 +273,7 @@ def find_E4(E2, genome):  # Finds E4
 #
 #Finds E1^E4
 #
-def find_E1E4(E1_whole,E2_whole,ID,genome,blast_dir,out_dir):
+def find_E1E4(E1_whole,E2_whole,ID,genome,start_E4_nt):
     E1_E4 = {}
     genome = str(genome).lower()
     startListE2 = []
@@ -298,7 +298,7 @@ def find_E1E4(E1_whole,E2_whole,ID,genome,blast_dir,out_dir):
         start_E1_nt = E1_whole[0]
         stop_E1_nt = (stopE1 - 2) + 1 + E1_whole[0]
 
-        start_E4_nt = find_splice_acceptor( E2_whole, ID, genome,blast_dir, out_dir)
+
         if start_E4_nt == False:
             E1_E4['E1^E4'] = False
             return E1_E4
@@ -329,7 +329,7 @@ def find_E1E4(E1_whole,E2_whole,ID,genome,blast_dir,out_dir):
 #Finds E8^E2
 #
 
-def find_E8E2(E1_whole, E2_whole, ID, genome, out_dir, blast_dir):
+def find_E8E2(E1_whole, E2_whole, ID, genome,startE2_nt):
     E8_E2 = {}
     E1_seq = str(E1_whole[2])
     E2_seq = str(E2_whole[2])
@@ -337,7 +337,7 @@ def find_E8E2(E1_whole, E2_whole, ID, genome, out_dir, blast_dir):
     genome = str(genome).lower()
     donor_options = ['aggtg','aggtt','agaga']
 
-    startE2_nt = find_splice_acceptor(E2_whole, ID, genome, blast_dir, out_dir)
+
 
     if startE2_nt == False:
 
@@ -653,6 +653,7 @@ def find_E8E2(E1_whole, E2_whole, ID, genome, out_dir, blast_dir):
 #
 def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
 
+    E2_trans = str(E2_whole[3])
     E2_seq = E2_whole[2]
     try:
         if os.path.isdir(splice_acceptor_dir):
@@ -669,7 +670,7 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
         os.makedirs(pave_wrong_dir)
     pave_wrong = os.path.join(pave_wrong_dir, 'pave_wrong.txt')
 
-    blast_subject = os.path.join(blast_dir, 'accession_e2.fa')
+    blast_subject = os.path.join(blast_dir, 'accession_e2_trans.fa')
     #blast_db = os.path.join(blast_dir,'accession_e2_half.fa')
     blast_out = os.path.join(splice_acceptor_dir, 'blast_result.tab')
 
@@ -681,11 +682,11 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
     #print("ID:{} E2_Seq:{}".format(ID, E2_seq))
     with open(query_file, 'a') as query:
         query.write('>{}\n'.format(ID))
-        query.write(E2_seq)
+        query.write(E2_trans)
 
-    cmd = blastn(query=query_file,
+    cmd = blastp(query=query_file,
                  subject=blast_subject,
-                 evalue=100,
+                 evalue=1e-10,
                  outfmt=6,
                  out=blast_out)
 
@@ -705,6 +706,7 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
         blast_result = csv.reader(blast_file, delimiter='\t')
         for row in blast_result:
             blast_options.append(row[1])
+    blast_options = blast_options[0:1]
     splice_sites = []
     aligned_starts = []
     for options in blast_options:
@@ -1075,7 +1077,7 @@ def to_results(dict):
 
     results_dir = os.path.join('puma_results')
 
-    results = os.path.join(results_dir, 'puma_results_09_10_18.fa')
+    results = os.path.join(results_dir, 'puma_results_09_13_18.fa')
 
     for protein in dict:
         if protein == 'name':
