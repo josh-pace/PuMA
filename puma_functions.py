@@ -487,21 +487,8 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
 
     E2_trans = str(E2_whole[3])
     E2_seq = E2_whole[2]
-    try:
-        if os.path.isdir(splice_acceptor_dir):
-            shutil.rmtree(splice_acceptor_dir)
-    except UnboundLocalError:
-        splice_acceptor_dir = os.path.join(out_dir, 'splice_acceptor')
-        if not os.path.isdir(splice_acceptor_dir):
-            os.makedirs(splice_acceptor_dir)
 
-
-
-    pave_wrong_dir = os.path.join('puma_results/pave_splice_wrong')
-    if not os.path.isdir(pave_wrong_dir):
-        os.makedirs(pave_wrong_dir)
-    pave_wrong = os.path.join(pave_wrong_dir, 'pave_wrong.txt')
-
+  
     blast_subject = os.path.join(blast_dir, 'accession_e2_trans.fa')
     #blast_db = os.path.join(blast_dir,'accession_e2_half.fa')
     blast_out = os.path.join(splice_acceptor_dir, 'blast_result.tab')
@@ -622,29 +609,6 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
                     break
 
         aligned_starts.append(aligned_splice_start)
-
-    wrong = []
-    for i in range(len(splice_sites)):
-        for j in range(i + 1, len(splice_sites)):
-            if splice_sites[i] == splice_sites[j]:
-                pass
-            else:
-                wrong.append(splice_sites.index(splice_sites[i]))
-
-    wrong = list(set(wrong))
-
-    with open(pave_wrong, 'a') as pave:
-        pave.write('Query:{}\n'.format(ID))
-        if len(wrong) == 0:
-            pave.write('Blast only found 1 hit:{}'.format(blast_options[0]))
-        else:
-            pave.write('PaVE possibly wrong for the following sequences:\n')
-        for options in wrong:
-            pave.write(blast_options[options] + '\n')
-            del splice_sites[options]
-            del aligned_starts[options]
-        pave.write('\n\n')
-
 
     aligned_splice_start = aligned_starts[-1]
 
