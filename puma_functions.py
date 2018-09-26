@@ -146,9 +146,6 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
                             int(end), str(L1_post).lower(), Seq(str(L1_post)).translate()]
                 else:
                     try:
-                        #print(seq)
-                        #print(protein_start[start])
-                        #print(protein_seq[seq])
                         M = re.search('M', protein_seq[seq])
                         real_start = protein_start[start] + M.start() + M.start() + M.start()
                         end = protein_start[start] + ((len(protein_seq[seq])+1) * 3)
@@ -164,6 +161,81 @@ def blast_proteins(genome,min_prot_len,evalue,blast_dir, out_dir):
 
     return found_proteins
 
+# --------------------------------------------------
+#
+#Finds the E1 binding site in the genome using the URR
+#
+# --------------------------------------------------
+
+def find_E1BS(genome, URR, URRstart, ID, out_dir):
+    genomeLength = len(genome)
+    E1BS = {}  # Storing E1BS
+    startURR = 0
+
+    tmp = os.path.join(out_dir, "puma_urr.fa")
+    with open(tmp, "w") as tempfile:  # Writting URR to a file so FIMO can be used
+        tempfile.write('>URR for {}\n'.format(ID))
+        tempfile.write(str(URR))
+        # print >> tempfile, '>URR for %s' %ID
+        # print >> tempfile, URR
+
+    fimo_exe = find_executable('fimo')
+    if not fimo_exe:
+        print('Please install "fimo" into your $PATH')
+        return
+
+    fimo_dir = os.path.join(out_dir, 'E1BS')
+    if not os.path.isdir(fimo_dir):
+        os.makedirs(fimo_dir)
+
+
+
+    fimo_cmd = '{} --oc {} --norc --verbosity 1 --thresh 1.0E-1 --bgfile {} {} {}'
+    cline = (fimo_cmd.format(fimo_exe, fimo_dir, 'background_model_E1BS.txt',
+                             'meme_E1BS_1motif_18_21.txt', tmp))
+
+    os.system(str(cline))  # Executing FIMO
+
+    fimo_out = os.path.join(fimo_dir, 'fimo.txt')
+
+    if not os.path.isfile(fimo_out):
+        print('Failed to create fimo out "{}"'.format(fimo_out))
+        return
+
+    for column in csv.reader(open(fimo_out, "rU"),
+                             delimiter='\t'):  # Getting nucleotide start positions from FIMO output file
+        if column[3] == 'start':
+            startListURR = []
+        else:
+            startListURR.append(column[3])
+
+    startURR = int(startListURR[0])  # Finding the start position of URR
+    genomestart = (startURR + URRstart)
+
+
+
+    if genomestart > genomeLength:  # Case where the start of E1BS is after the end of the genome
+        genomestart = genomestart - genomeLength
+
+
+    genomestop = genomestart + 19
+
+    if genomestop > genomeLength:  # For printing all info
+        genomestop = genomestop - genomeLength
+        sequence = str(genome[int(genomestart)-2:] + genome[:genomestop]).lower()
+        E1BS['E1BS'] = [int(genomestart), int(genomeLength), 1, int(genomestop),sequence]
+
+    else:
+        if genomestart == 1:
+            sequence = str(genome[-1]).lower() + str(genome[int(genomestart - 1):int(
+                genomestop)]).lower()
+            E1BS['E1BS'] = [int(genomestart), int(genomestop), sequence]
+
+        else:
+            sequence = str(genome[int(genomestart-2):int(genomestop)]).lower()
+            E1BS['E1BS'] = [int(genomestart), int(genomestop),sequence]
+
+    return E1BS
 # --------------------------------------------------
 
 # --------------------------------------------------
@@ -225,22 +297,10 @@ def find_E2BS(genome, URR, URRstart, ID, out_dir):
         else:
             startListGenome.append(genomestart-1)
 
-    # for value in startListGenome:#Accounting for the case where the sequence is longer then the genome length
-    #     if ((value + 12) > genomeLength):
-    #         stop = (value + 12) - genomeLength
-    #         index = startListGenome.index(value)
-    #         startListGenome[index] = (str(value) + '..' + str(stop))
-
     E2BS['E2BS'] = startListGenome  # Putting values into dictionary
 
     return E2BS
 # --------------------------------------------------
-
-# --------------------------------------------------
-#
-#Finds the E4 protein which is contained within the E2 protein
-#
-
 def find_E4(E2, genome):  # Finds E4
     E4 = {}  # Storing E4 information
 
@@ -323,332 +383,104 @@ def find_E1E4(E1_whole,E2_whole,ID,genome,start_E4_nt):
         E1_E4['E1^E4'] = [0, 0, 0, 0, 'Function Crashed','',genome[start_E1_nt:stop_E1_nt]]
         return E1_E4
 # --------------------------------------------------
-
-# --------------------------------------------------
-#
-#Finds E8^E2
-#
-
 def find_E8E2(E1_whole, E2_whole, ID, genome,startE2_nt):
     E8_E2 = {}
     E1_seq = str(E1_whole[2])
-    E2_seq = str(E2_whole[2])
     stopE8List = []
     genome = str(genome).lower()
-    donor_options = ['aggtg','aggtt','agaga']
-
-
+    donor_options = ['aggtg','aggtt','agaga','aggga']
 
     if startE2_nt == False:
 
         E8_E2['E8^E2'] = False
         return E8_E2
 
-
-
-
-
-    # test_seq = min(re.findall(r'(atg(?:(?!ag(?:gta|gtg|gtt|aga))...)*(?:ag('r'?:gta|gtg|gtt|aga)))',E1_seq),key=len)
-    #
-    # print("test:{}".format(test_seq))
-    #
-    # startE8 = (re.search(test_seq,E1_seq).start()) + E1_whole[0]
-    #
-    # print("Start E8:{}".format(startE8))
-
-
     for stop in re.finditer('aggta', E1_seq):
         stopE8List.append(stop.start())
-    #print('Looking for aggta: {}'.format(stopE8List))
-    actual = []
+    print('Looking for aggta: {}'.format(stopE8List))
+    actualSites = []
+    outOfRange = 0
     for stop in stopE8List:
         if stop > 700 or stop < 20:
-            for sites in donor_options:
-                if sites in E1_seq:
-                    #print(sites)
-                    #print(re.search(sites, E1_seq).start())
-                    stopE8List.append(re.search(sites, E1_seq).start())
-            stopE8List = sorted(stopE8List)
-    #print('stopE8 options:{}'.format(stopE8List))
+            outOfRange += 1
 
-    if len(stopE8List) == 0:
-        #print('Length=0')
+    print("StopList after first check:{}".format(stopE8List))
+
+    print("Out of range:{}".format(outOfRange))
+
+    if len(stopE8List) == outOfRange:#or len(stopE8List) == 0
+        stopE8List.clear()
         for sites in donor_options:
+            print("sites in donor_options:{}".format(sites))
             if sites in E1_seq:
                 stopE8List.append(re.search(sites, E1_seq).start())
+                print("Site found:{} and position:{}".format(sites,re.search(sites, E1_seq).start()))
         stopE8List = sorted(stopE8List)  # splice donor site list
-        stopE8 = stopE8List[0]
-
-    else:
-        for stop in stopE8List:
-            #print(stop)
-            if stop > 325 and stop < 600:
-                actual.append(stop)
-        actual = list(sorted(set(actual)))
-        if len(actual) == 0:
-            print('Worked')
-            E8_E2['E8^E2'] = False
-            return E8_E2
-        else:
-            print('actual: {}'.format(actual))
-            for position in actual:
-                print('position:{}'.format(position))
-                try:
-                    stopE8 = position
-                    stopE8_nt = (stopE8 + E1_whole[0]) + 1
-                    test_string = E1_seq[:stopE8]
+    for stop in stopE8List:
+        #print(stop)
+        if stop > 325 and stop < 600:
+            actualSites.append(stop)
 
 
-                    i = len(test_string)
-                    pos = i
-                    #print("test:{}".format(test_string[i - 3:i]))
-                    E1_seq_partial = test_string
-                    while (i >= 0 and i > pos - 70):
-                        print('test_string:{}'.format(test_string[i - 3:i]))
-                        print(pos - i - 3)
-                        if test_string[i - 3:i] == 'atg':
-                            E8_seq = E1_seq_partial[i - 3:]
-                            startE8 = re.search(E8_seq, E1_seq).start()
-                            print('stop - start: {}'.format(stopE8 - startE8))
-                            if (stopE8 - startE8) + 1 >= 19:
-                                break
-                            else:
-                                if (stopE8 - startE8) + 1 >= 20:
-                                    print('test_string_if:{}'.format(test_string[i - 3:i]))
-                                    E8_seq = E1_seq_partial[i - 3:]
-                                    startE8 = re.search(E8_seq, E1_seq).start()
-                                    break
-                                else:
-                                    i = i - 3
+    actualSites = list(sorted(set(actualSites)))
 
-                        else:
-                            i = i - 3
-                    startE8_nt = startE8 + E1_whole[0]
-                except UnboundLocalError:
-                    print("CHECK E8")
-                    startE8 = 0
-                    # stopE8 = actual[1]
-                    # stopE8_nt = (stopE8 + E1_whole[0]) + 1
-                    # test_string = E1_seq[:stopE8]
-                    #
-                    # i = len(test_string)
-                    # pos = i
-                    # # print("test:{}".format(test_string[i - 3:i]))
-                    # E1_seq_partial = test_string
-                    # while (i >= 0 and i > pos - 70):
-                    #     # print('test_string:{}'.format(test_string[i - 3:i]))
-                    #     # print(pos - i - 3)
-                    #     if test_string[i - 3:i] == 'atg':
-                    #         E8_seq = E1_seq_partial[i - 3:]
-                    #         startE8 = re.search(E8_seq, E1_seq).start()
-                    #         print('stop - start: {}'.format(stopE8 - startE8))
-                    #         if (stopE8 - startE8) + 1 >= 19:
-                    #             break
-                    #         else:
-                    #             if (stopE8 - startE8) + 1 >= 20:
-                    #                 print('test_string_if:{}'.format(test_string[i - 3:i]))
-                    #                 E8_seq = E1_seq_partial[i - 3:]
-                    #                 startE8 = re.search(E8_seq, E1_seq).start()
-                    #                 break
-                    #             else:
-                    #                 i = i - 3
-                    #
-                    #     else:
-                    #         i = i - 3
-                    startE8_nt = startE8 + E1_whole[0]
+    print("Stop sites:{}".format(actualSites))
 
+    if len(actualSites) == 0:
+        E8_E2['E8^E2'] = False
+        return E8_E2
 
         if startE2_nt != False:
             stopE2_nt = E2_whole[1]
 
-            E8_E2_seq = Seq(genome[startE8_nt-1:stopE8_nt] + genome[
-            startE2_nt:stopE2_nt])
-            E8_E2_trans = E8_E2_seq.translate()
+    for position in actualSites:
 
-            # E8 = genome[startE8_nt - 1:stopE8_nt]  # for testing purposes
-            # print('E8_seq:{}'.format(E8))
-            # print('E8_start:{}'.format(startE8_nt))
-            # print('E8_stop:{}'.format(stopE8_nt))
+        #try:
+        stopE8 = position#actualSites[0]
+        search_seq = E1_seq[:stopE8]
+        i = len(search_seq)
+        end_seq = i
 
-            E8_E2['E8^E2'] = [startE8_nt,stopE8_nt,startE2_nt + 1,stopE2_nt,E8_E2_seq,
+        while(i>= 0 and i > end_seq - 70):
+            #print("search_seq:{}".format(search_seq[i-3:i]))
+            if search_seq[i-3:i] == 'atg':
+                E8_seq = search_seq[i - 3:]
+                startE8 = re.search(E8_seq, E1_seq).start()
+                print("search_seq:{}".format(search_seq[i-3:i]))
+                break
+            else:
+                print("in else")
+                i = i - 3
+                print("search_seq in else:{}".format(search_seq[-3:i]))
+        continue
+
+    print("startE8:{}".format(startE8 + E1_whole[0]))
+    print("stopE8:{}".format((stopE8 + E1_whole[0])+1))
+
+        #except
+
+    startE8_nt = startE8 + E1_whole[0]
+    stopE8_nt = (stopE8 + E1_whole[0]) + 1
+
+    if startE2_nt != False:
+        stopE2_nt = E2_whole[1]
+
+
+
+    E8_E2_seq = Seq(genome[startE8_nt - 1:stopE8_nt] + genome[
+    startE2_nt:stopE2_nt])
+    E8_E2_trans = E8_E2_seq.translate()
+
+    print("E8_seq:{}".format(E8_E2_seq))
+
+    E8_E2['E8^E2'] = [startE8_nt, stopE8_nt, startE2_nt + 1, stopE2_nt, E8_E2_seq,
             E8_E2_trans]
 
-
-            return E8_E2
-
-
-
+    return E8_E2
 # --------------------------------------------------
 #
-#Finds splice acceptor site for E1^E4 and E8^E2
-#Returns the start position of the splice acceptor site
-#
-
-# def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
-#
-#     E2_seq = E2_whole[2]
-#
-#     splice_acceptor_dir = os.path.join(out_dir, 'splice_acceptor')
-#     if not os.path.isdir(splice_acceptor_dir):
-#         os.makedirs(splice_acceptor_dir)
-#
-#     blast_subject = os.path.join(blast_dir, 'accession_e2_half.fa')
-#
-#     blast_out = os.path.join(splice_acceptor_dir, 'blast_result.tab')
-#
-#     if os.path.isfile(blast_out):
-#         os.remove(blast_out)
-#
-#     query_file = os.path.join(splice_acceptor_dir, 'query.fa')
-#
-#     with open(query_file, 'a') as query:
-#         query.write('>{}\n'.format(ID))
-#         query.write(E2_seq)
-#
-#     cmd = blastn(query=query_file,
-#                  subject=blast_subject,
-#                  evalue=100,
-#                  outfmt=6,
-#                  out=blast_out)
-#
-#     stdout, stderr = cmd()
-#     if stdout:
-#         print("STDOUT = ", stdout)
-#     if stderr:
-#         print("STDERR = ", stderr)
-#
-#     if not os.path.isfile(blast_out) or not os.path.getsize(blast_out):
-#         print('No BLAST output "{}" (must have failed)'.format(blast_out))
-#         sys.exit(1)
-#
-#     blast_options = []
-#     with open(blast_out) as blast_file:
-#         blast_result = csv.reader(blast_file, delimiter='\t')
-#         for row in blast_result:
-#             blast_options.append(row[1])
-#
-#     query = blast_options[0]
-#     known_E2 = {}
-#     print("Query:{}".format(query))
-#     csv_database = os.path.join(blast_dir, 'all_pave.csv')
-#
-#     #Look into the names
-#     with open(csv_database, 'r') as csvfile:
-#         read = csv.reader(csvfile)
-#         for row in read:
-#             if row[0] == query and row[1] == 'E8^E2':
-#                 splice_acceptor_positions = row[2]
-#             if row[0] == query and row[1] == 'E2':
-#                 known_E2[query] = str(row[3]).lower()
-#                 known_E2_start = str(row[2])
-#             if row[0] == query and row[1] == 'CG':
-#                 known_CG = str(row[3]).lower()
-#
-#     splice_start_genome = splice_acceptor_positions.split('+')[1]
-#     splice_start_genome = int(str(splice_start_genome).split('..')[0])
-#
-#     known_E2_start = int(known_E2_start.split('..')[0])
-#
-#     splice_start_known = splice_start_genome - known_E2_start
-#
-#     print("splice start in {}:{}".format(query,splice_start_known))
-#     print("E2 start in {}:{}".format(query, known_E2_start))
-#
-#     print('len before alignment of known, unkown:{}, {}'.format(len(known_E2[query]),
-#                                                                     len(E2_seq)))
-#
-#     unaligned = os.path.join(splice_acceptor_dir, 'unaligned.fa')
-#     aligned = os.path.join(splice_acceptor_dir, 'aligned.fa')
-#     # if E2_seq == known_E2[query]:
-#     #     print("Seqs are same before alignment")
-#     # else:
-#     #     print("Seqs are not the same before the alignment")
-#
-#     for key in known_E2:
-#         with open(unaligned, 'a') as sequence_file:
-#             sequence_file.write(">{}\n".format(ID))
-#             sequence_file.write("{}\n".format(E2_seq))
-#             sequence_file.write(">{}\n".format(key))
-#             sequence_file.write("{}\n".format(known_E2[key]))
-#
-#     cline = MuscleCommandline(input=unaligned, out=aligned, verbose=False)
-#
-#     stdout, stderr = cline()
-#
-#     #How to output to stop printing
-#
-#
-#
-#     if stdout:
-#         print("STDOUT = ", stdout)
-#     if stderr:
-#         print("STDERR = ", stderr)
-#
-#     align_seq = []
-#     for aln in AlignIO.read(aligned, 'fasta'):
-#         align_seq.append(aln.seq)
-#
-#     unknown_seq = str(align_seq[0]).lower()
-#     known_seq = str(align_seq[1]).lower()
-#
-#     #print('Unknown:{}'.format(unknown_seq))
-#     #print("Known:{}" .format(known_seq))
-#
-#     j = 0
-#     aligned_splice_start = 0
-#
-#
-#     for position in known_seq:
-#         aligned_splice_start = aligned_splice_start + 1
-#         if position.lower() in ['a','c','t','g']:
-#             j = j + 1
-#             if j == splice_start_known:
-#                 break
-#
-#     # if known_seq == unknown_seq:
-#     #     print("Seqs are same after alignment")
-#     # else:
-#     #     print("Seqs are not the same after the alignment")
-#
-#     print('Splice start in seq:{}'.format(splice_start_known))
-#     print('splice start in unkown:{}'.format(aligned_splice_start))
-#
-#     search_seq = unknown_seq[aligned_splice_start-1:aligned_splice_start + 51].replace('-','')
-#
-#     print('len unknown_seq:{}'.format(len(unknown_seq)))
-#     print('len known_seq:{}'.format(len(known_seq)))
-#     print(len(search_seq))
-#
-#     print('Search_seq:{}'.format(search_seq))
-#     startE2_nt = (re.search(search_seq,str(genome).lower()).start()) + 2
-#
-#
-#     # print('should be ag:{}'.format(known_CG[start_E2_known - 3:start_E2_known - 1]))
-#     #
-#     # search_seq = known_CG[start_E2_known - 1:start_E2_known + 20]
-#     #
-#     # print('search_seq:{}'.format(search_seq))
-#     #
-#     # print('known_seq after alignment:{}'.format(known_seq))
-#     #
-#     # splice_acceptor_start = re.search(search_seq, known_seq).start()
-#     #
-#     #
-#     # print('start of splice acceptor:{}'.format(splice_acceptor_start))
-#     #
-#     # print('should be ag in unkown:{}'.format(
-#     #     unknown_seq[splice_acceptor_start - 2:splice_acceptor_start]))
-#     #
-#     # if unknown_seq[splice_acceptor_start - 2:splice_acceptor_start] == 'ag':
-#     #     startE2_nt = splice_acceptor_start + E2_whole[0]
-#     # else:
-#     #     startE2_nt = 'something is wrong'
-#     #     print('Something is wrong')
-#     #
-#     # print('print start of unkown E2:{}'.format(E2_whole[0]))
-#
-#     return startE2_nt
 # --------------------------------------------------
+
 #New version of find_splice_acceptor
 #
 def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
@@ -743,13 +575,6 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
             startE2_nt = False
             return startE2_nt
 
-
-
-
-        # print("splice start in {}:{}".format(query,splice_start_known))
-        # print("E2 start in {}:{}".format(query, known_E2_start))
-
-
         unaligned = os.path.join(splice_acceptor_dir, 'unaligned.fa')
         aligned = os.path.join(splice_acceptor_dir, 'aligned.fa')
 
@@ -758,10 +583,6 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
 
         if os.path.isfile(aligned):
             os.remove(aligned)
-        # if E2_seq == known_E2[query]:
-        #     print("Seqs are same before alignment")
-        # else:
-        #     print("Seqs are not the same before the alignment")
 
         for key in known_E2:
             with open(unaligned, 'a') as sequence_file:
@@ -790,13 +611,8 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
         unknown_seq = str(align_seq[0]).lower()
         known_seq = str(align_seq[1]).lower()
 
-        #print('Unknown:{}'.format(unknown_seq))
-        #print("Known:{}" .format(known_seq))
-
         j = 0
         aligned_splice_start = 0
-
-
 
         for position in known_seq:
             aligned_splice_start = aligned_splice_start + 1
@@ -807,10 +623,6 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
 
         aligned_starts.append(aligned_splice_start)
 
-
-
-
-    #print('splice site start:{}'.format(splice_sites))
     wrong = []
     for i in range(len(splice_sites)):
         for j in range(i + 1, len(splice_sites)):
@@ -820,7 +632,6 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
                 wrong.append(splice_sites.index(splice_sites[i]))
 
     wrong = list(set(wrong))
-    #print('wrong:{}'.format(wrong))
 
     with open(pave_wrong, 'a') as pave:
         pave.write('Query:{}\n'.format(ID))
@@ -835,154 +646,21 @@ def find_splice_acceptor( E2_whole, ID,genome, blast_dir, out_dir):
         pave.write('\n\n')
 
 
-
-    #print('options after deletion:{}'.format(aligned_starts))
-
-
-
-
     aligned_splice_start = aligned_starts[-1]
 
 
-
-    # print('Splice start in seq:{}'.format(splice_start_known))
-    # print('splice start in unkown(aligned):{}'.format(aligned_splice_start))
-
     search_seq = unknown_seq[aligned_splice_start:aligned_splice_start + 50].replace('-','')
-    search_seq_long = unknown_seq[aligned_splice_start:aligned_splice_start + 50]
-    #print('Search_seq:{}'.format(search_seq))
-    #print('start of -:{}'.format(re.search('-',unknown_seq).start()))
-    # i = 0
-    # while unknown_seq[aligned_splice_start-2:aligned_splice_start] != 'ag':
-    #     search_seq = unknown_seq[aligned_splice_start-i:aligned_splice_start +
-    #                                                    50].replace('-','')
-    #
-    #     i = i + 1
-
-
-
-
-
-
-    # print('len unknown_seq:{}'.format(len(unknown_seq)))
-    # print('len known_seq:{}'.format(len(known_seq)))
-    # print(len(search_seq))
-    #print('Search_seq after while loop:{}'.format(search_seq))
 
     startE2_nt = re.search(search_seq,str(genome).lower()).start()
 
-    # print(genome[startE2_nt:startE2_nt+6])
-    #
-    # print("Start of splice site:{}".format(startE2_nt))
-
-
-    # print('should be ag:{}'.format(known_CG[start_E2_known - 3:start_E2_known - 1]))
-    #
-    # search_seq = known_CG[start_E2_known - 1:start_E2_known + 20]
-    #
-    # print('search_seq:{}'.format(search_seq))
-    #
-    # print('known_seq after alignment:{}'.format(known_seq))
-    #
-    # splice_acceptor_start = re.search(search_seq, known_seq).start()
-    #
-    #
-    # print('start of splice acceptor:{}'.format(splice_acceptor_start))
-    #
-    # print('should be ag in unkown:{}'.format(
-    #     unknown_seq[splice_acceptor_start - 2:splice_acceptor_start]))
-    #
-    # if unknown_seq[splice_acceptor_start - 2:splice_acceptor_start] == 'ag':
-    #     startE2_nt = splice_acceptor_start + E2_whole[0]
-    # else:
-    #     startE2_nt = 'something is wrong'
-    #     print('Something is wrong')
-    #
-    # print('print start of unkown E2:{}'.format(E2_whole[0]))
 
     return startE2_nt
 
 
 # --------------------------------------------------
-#
-#Finds the E1 binding site in the genome using the URR
-#
-
-def find_E1BS(genome, URR, URRstart, ID, out_dir):
-    genomeLength = len(genome)
-    E1BS = {}  # Storing E1BS
-    startURR = 0
-
-    tmp = os.path.join(out_dir, "puma_urr.fa")
-    with open(tmp, "w") as tempfile:  # Writting URR to a file so FIMO can be used
-        tempfile.write('>URR for {}\n'.format(ID))
-        tempfile.write(str(URR))
-        # print >> tempfile, '>URR for %s' %ID
-        # print >> tempfile, URR
-
-    fimo_exe = find_executable('fimo')
-    if not fimo_exe:
-        print('Please install "fimo" into your $PATH')
-        return
-
-    fimo_dir = os.path.join(out_dir, 'E1BS')
-    if not os.path.isdir(fimo_dir):
-        os.makedirs(fimo_dir)
 
 
 
-    fimo_cmd = '{} --oc {} --norc --verbosity 1 --thresh 1.0E-1 --bgfile {} {} {}'
-    cline = (fimo_cmd.format(fimo_exe, fimo_dir, 'background_model_E1BS.txt',
-                             'meme_E1BS_1motif_18_21.txt', tmp))
-
-    os.system(str(cline))  # Executing FIMO
-
-    fimo_out = os.path.join(fimo_dir, 'fimo.txt')
-
-    if not os.path.isfile(fimo_out):
-        print('Failed to create fimo out "{}"'.format(fimo_out))
-        return
-
-    for column in csv.reader(open(fimo_out, "rU"),
-                             delimiter='\t'):  # Getting nucleotide start positions from FIMO output file
-        if column[3] == 'start':
-            startListURR = []
-        else:
-            startListURR.append(column[3])
-
-    startURR = int(startListURR[0])  # Finding the start position of URR
-    genomestart = (startURR + URRstart)
-
-
-
-    if genomestart > genomeLength:  # Case where the start of E1BS is after the end of the genome
-        genomestart = genomestart - genomeLength
-
-
-    genomestop = genomestart + 19
-
-    if genomestop > genomeLength:  # For printing all info
-        genomestop = genomestop - genomeLength
-        sequence = str(genome[int(genomestart)-2:] + genome[:genomestop]).lower()
-        E1BS['E1BS'] = [int(genomestart), int(genomeLength), 1, int(genomestop),sequence]
-
-    else:
-        if genomestart == 1:
-            sequence = str(genome[-1]).lower() + str(genome[int(genomestart - 1):int(
-                genomestop)]).lower()
-            E1BS['E1BS'] = [int(genomestart), int(genomestop), sequence]
-
-        else:
-            sequence = str(genome[int(genomestart-2):int(genomestop)]).lower()
-            E1BS['E1BS'] = [int(genomestart), int(genomestop),sequence]
-    # if genomestop > genomeLength:#For printing all info
-    #     genomestop = genomestop - genomeLength
-    #     #print genomestop
-    #     E1BS[genomestart] = genome[genomestart-1:] + genome[:genomestop]
-    # else:
-    #     E1BS[genomestart] = genome[genomestart - 1:genomestop]
-    return E1BS
-# --------------------------------------------------
 # --------------------------------------------------
 # def to_gff3(dict, genomelen, out_dir):
 #     del dict['genome']
@@ -1029,16 +707,17 @@ def find_E1BS(genome, URR, URRstart, ID, out_dir):
 
 #
 #Output to gff3 file
-#
+
+
+#NEED TO FIX FORMAT
 
 def to_gff3(dict, genomelen, out_dir):
     del dict['genome']
-    del dict['accession']
     del dict['E1BS']
     del dict['E2BS']
     del dict['URR']
-    all = dict['name']
-    name = re.search('\(([^)]+)', all).group(1)
+
+    name = dict['accession']
     dict['name'] = name
     gff3_out = os.path.join(out_dir, '{}.gff3'.format(dict['name']))
 
@@ -1049,6 +728,13 @@ def to_gff3(dict, genomelen, out_dir):
     for protein in dict:
         if protein == 'name':
             pass
+        elif "^" in protein:
+            with open(gff3_out, 'a') as out_file:
+                out_file.write(
+            "{}\tPuMA\tCDS\t{}\t{}\t{}\t{}\t.\t+\t.\tID={};Note=[{}-{} + {}-{}]\n".format(
+                 dict['name'], dict[protein][0], dict[protein][1],
+                dict[protein][2],dict[protein][3],protein, dict[protein][ 0],
+                dict[protein][1],dict[protein][2],dict[protein][3]))
         else:
             with open(gff3_out, 'a') as out_file:
                 out_file.write(
@@ -1073,12 +759,12 @@ def to_results(dict):
 
 
     all = dict['name']
+
     short_name = re.search('\(([^)]+)', all).group(1)
 
     results_dir = os.path.join('puma_results')
 
-    results = os.path.join(results_dir, 'puma_results_09_13_18.fa')
-
+    results = os.path.join(results_dir, 'puma_results_9_25_newBlast.fa')
     for protein in dict:
         if protein == 'name':
             pass
@@ -1111,53 +797,19 @@ def to_results(dict):
                 out_file.write("{}\n".format(dict[protein][2]))
 
 
-
-    return
-
-# --------------------------------------------------
-def result_E1BS(dict):
-
-
-    results_dir = os.path.join('puma_results')
-    if not os.path.isdir(results_dir):
-        os.makedirs(results_dir)
-
-    all = dict['name']
-    #short_name = re.search('\(([^)]+)', all).group(1)
-    short_name = all
-
-    results = os.path.join(results_dir, 'puma_E1BS_result.fa')
-
-    for protein in dict:
-        if protein == 'E1BS':
-            try:
-                if type(dict[protein][3]) == int:
-                    with open(results, 'a') as out_file:
-                        out_file.write(">{}\n".format(short_name))
-                        out_file.write("{}\n".format(dict[protein][4]))
-                else:
-                    with open(results, 'a') as out_file:
-                        out_file.write(">{}\n".format(short_name))
-                        out_file.write("{}\n".format(dict[protein][2]))
-            except IndexError:
-                with open(results, 'a') as out_file:
-                    out_file.write(">{}\n".format(short_name))
-                    out_file.write("{}\n".format(dict[protein][2]))
-
-
     return
 
 # --------------------------------------------------
 #
 #Output to csv file
 #
-def export_to_csv(annotations):
+def export_to_csv(annotations,out_dir):
+
+    #csv_out = os.path.join(out_dir, 'puma_results.csv')
 
     results_dir = os.path.join('puma_results')
-    if not os.path.isdir(results_dir):
-        os.makedirs(results_dir)
+    csv_out = os.path.join(results_dir, 'puma_results.csv')
 
-    csv_out = os.path.join(results_dir, 'results_test.csv')
 
     with open(csv_out,'a') as out:
         out_file = csv.writer(out)
@@ -1225,27 +877,4 @@ def export_to_csv(annotations):
                                      annotations[value][2], annotations[value][3]]])
 
     return
-# --------------------------------------------------
-# --------------------------------------------------
-def check_spliced(dict):
-    results_dir = os.path.join('puma_results')
-    if not os.path.isdir(results_dir):
-        os.makedirs(results_dir)
-
-    all = dict['name']
-    #short_name = re.search('\(([^)]+)', all).group(1)
-    short_name = all
-
-    results = os.path.join(results_dir, 'puma_new_E1^E4_result.fa')
-
-    for protein in dict:
-        if protein == 'E1^E4':
-                    with open(results, 'a') as out_file:
-                        out_file.write(">{}, E1^E4 gene\n".format(short_name))
-                        out_file.write("{}\n".format(dict[protein][4]))
-
-
-
-    return
-
 # --------------------------------------------------

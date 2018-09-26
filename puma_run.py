@@ -109,7 +109,6 @@ def main():
 
     virus = {}
     # Main dictionary that will store information about proteins, URR, E2BS etc
-    check = {}
     blasted = {}
     #Stores the blasted results to find URR start and stop
 
@@ -120,11 +119,10 @@ def main():
         # Opening file and storing the genome
 
     virus['name'] = name
-    check['name'] = name
     virus['accession'] = ID
     virus['genome'] = Origseq
     # Adding name etc to dictionary
-    #ORF = Trans_ORF(Origseq, 1, 25)  # Calling transORF function to translate genome
+
 
     print("\nThis is the gene information for {}:".format(virus['name']))
 
@@ -141,7 +139,6 @@ def main():
             startStop.append(blasted[protein][0])
 
     startStop = sorted(startStop)
-    #print(startStop)
     # Putting postions in increasing order to find URR stop position
     for numbers in startStop:  # Finding URR stop position
         if numbers == URRstart:
@@ -151,7 +148,6 @@ def main():
                 position = startStop.index(numbers)
                 URRstop = startStop[position + 1]
 
-    #print('E1:{}'.format(virus['E1']))
 
     URRstart = int(URRstart) + 1
     URRstop = int(URRstop) - 1
@@ -193,16 +189,6 @@ def main():
     E2BS = find_E2BS(Origseq, URRfound, URRstart, ID, out_dir)
     virus.update(E2BS)
 
-    # for protein in virus:  # Getting E2 nucleotide sequence for the E4 function
-    #     if protein == "E2":
-    #         E2Start = virus[protein][0]
-    #         E2Stop = virus[protein][1]
-    #         E2seq = Origseq[E2Start - 1:E2Stop]
-
-
-
-
-
     E1BS = find_E1BS(Origseq, URRfound, URRstart, ID, out_dir)  # Calling E1BS function
 
     virus.update(E1BS)  # Adding E1BS to main dictionary
@@ -215,17 +201,16 @@ def main():
     print("E1^E4:{}".format(E1_E4))
     print("E8^E2:{}".format(E8_E2))
     if E8_E2['E8^E2'] == False:
-        #print("Inside E8^E2 if")
         pass
     else:
         virus.update(E8_E2)
     if E1_E4['E1^E4'] == False:
-        #print("Inside E1^E4 if")
         pass
     else:
         virus.update(E1_E4)
 
-
+    #export_to_csv(virus, out_dir)
+    #print("virus_dict accession:{}".format(virus['accession']))
 
     if sites[0] == 'ALL':
         sites = {}
@@ -234,129 +219,58 @@ def main():
         del sites['genome']
         del sites['accession']
 
-
-    #print(virus['URR'])
-
-
-    #print(virus)
-
     # for protein in virus:
     #     print(protein)
-    #
-    # for name in sites:
-    #     if name == 'E2BS':
-    #         print("\n{} E2 binding sites found:".format(len(virus['E2BS'])))
-    #         for i in range(0, len(virus['E2BS'])):
-    #             print('\n{} start and stop position:\n{},{}\n'.format(name,
-    #                 virus[name][i], virus[name][i] + 11))
-    #             print('{} sequnce:\n{}\n'.format(name, str(virus['genome'][virus['E2BS'][i]
-    #                                                 - 1:virus['E2BS'][i] + 11]).lower()))
-    #     elif name == 'E1BS':
-    #         if type(virus[name][2]) == int:
-    #             print('\n{} start and stop position:\n{},{},{},{}\n'.format(name, virus
-    #             [name][0], virus[name][1], virus[name][2], virus[name][3]))
-    #             print('{} seqeunce:\n{}\n'.format(name, virus[name][4]))
-    #         else:
-    #             print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
-    #                                                                   , virus[name][1]))
-    #             print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
-    #     else:
-    #         try:
-    #             if type(virus[name][3]) == int:
-    #                 print('\n{} start and stop position:\n{},{},{},{}\n'.format(name, virus
-    #                       [name][0], virus[name][1], virus[name][2], virus[name][3]))
-    #                 print('{} seqeunce:\n{}\n'.format(name, virus[name][4]))
-    #                 if name != 'URR':
-    #                     print('{} translated sequnce:\n{}\n'.format(name, virus[name][
-    #                         5][:-1]))
-    #             else:
-    #                 print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
-    #                                                                   , virus[name][1]))
-    #                 print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
-    #                 if name != 'URR':
-    #                     print('{} translated seqeunce:\n{}\n'.format(name, virus[name][
-    #                         3][:-1]))
-    #         except IndexError:
-    #             print('Line 275:{}'.format(virus[name]))
-    #             print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
-    #                                                                   , virus[name][1]))
-    #             print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
-    #             if name != 'URR':
-    #                 print('{} translated seqeunce:\n{}\n'.format(name, virus[name][
-    #                     3][:-1]))
+
+    for name in sites:
+        if name == 'E2BS':
+            print("\n{} E2 binding sites found:".format(len(virus['E2BS'])))
+            for i in range(0, len(virus['E2BS'])):
+                print('\n{} start and stop position:\n{},{}\n'.format(name,
+                    virus[name][i], virus[name][i] + 11))
+                print('{} sequnce:\n{}\n'.format(name, str(virus['genome'][virus['E2BS'][i]
+                                                    - 1:virus['E2BS'][i] + 11]).lower()))
+        elif name == 'E1BS':
+            if type(virus[name][2]) == int:
+                print('\n{} start and stop position:\n{},{},{},{}\n'.format(name, virus
+                [name][0], virus[name][1], virus[name][2], virus[name][3]))
+                print('{} seqeunce:\n{}\n'.format(name, virus[name][4]))
+            else:
+                print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
+                                                                      , virus[name][1]))
+                print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
+        else:
+            try:
+                if type(virus[name][3]) == int:
+                    print('\n{} start and stop position:\n{},{},{},{}\n'.format(name, virus
+                          [name][0], virus[name][1], virus[name][2], virus[name][3]))
+                    print('{} seqeunce:\n{}\n'.format(name, virus[name][4]))
+                    if name != 'URR':
+                        print('{} translated sequnce:\n{}\n'.format(name, virus[name][
+                            5][:-1]))
+                else:
+                    print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
+                                                                      , virus[name][1]))
+                    print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
+                    if name != 'URR':
+                        print('{} translated seqeunce:\n{}\n'.format(name, virus[name][
+                            3][:-1]))
+            except IndexError:
+                print('Line 275:{}'.format(virus[name]))
+                print('\n{} start and stop position:\n{},{}\n'.format(name, virus[name][0]
+                                                                      , virus[name][1]))
+                print('{} sequnce:\n{}\n'.format(name, virus[name][2]))
+                if name != 'URR':
+                    print('{} translated seqeunce:\n{}\n'.format(name, virus[name][
+                        3][:-1]))
 
 
     #to_gff3(virus,genomelen,out_dir)
-    #print(virus['E1BS'])
-    #result_E1BS(virus)
-    #print(len(virus['E4'][3]))
-    #print('E1: {}'.format(virus['E1']))
-    # E1_E4 = find_E1E4(virus['E1'],virus['E2'],ID,Origseq,blast_dir,out_dir)
-    #
-    # print(E1_E4)
-    #
-    # real = "atggcggacaaggaccataaagctcttcgccgccatctggaagcagggtatcccttctgccctccgacaccacatccctccagccctcgtccagcgtctccaccacacaaaaacgatacgcacgaaccggatctagccctacagccaccgcccggcggcagaggaaaagagaaagacaagaaggagacggagaaggaacgcaggcgacatcgagacaacgtgtcagatcaagatcaagaagctccagcagagggaggaggcaagaaacctcagtcaaacgagggaaagggcgaggaggagggtcacgagggagaagagaacccacccaacgagacacctcctccaggggagggagaagtagaaggcggccccaaacacggtccaggtccagatcaagagggtcttctaatgagcgtggcctcttgccttcagaagtgggaagatcagtacaatcagttggttcaaaacatcttggtagacttgagcgattattggaagaggctgcagatcccccagtaa"
-    # test = E1_E4['E1^E4'][4]
-    #
-    # if real == test:
-    #     print('PaVE matches PuMA for {}!'.format(virus['name']))
-    # else:
-    #     print('NO they are not the same')
-
-    #check.update(E1_E4)
-
-
-    #check_spliced(check)
-    # E8_E2 = find_E8E2(virus['E1'], virus['E2'], ID, Origseq, out_dir, blast_dir)
-    # print("E8_E2:{}".format(E8_E2))
-
-    #test = find_splice_acceptor(virus['E2'], ID,Origseq,blast_dir, out_dir)
-
-    #print(test)
-    # if E1_E4['E1^E4'][4] == 'E8':
-    #     results = os.path.join('puma_results')
-    #     if not os.path.isdir(results):
-    #         os.makedirs(results)
-    #     wrong = os.path.join(results, 'E1^E4_problem.txt')
-    #     with open(wrong,'a') as file_out:
-    #         # all = virus['name']
-    #         # name = re.search('\(([^)]+)', all).group(1)
-    #         virus['name'] = name
-    #         file_out.write(virus['name'] + '\n')
-    #         print('Name added for E1^E4')
-    #
-    #
-    # if E8_E2['E8^E2'][4] == 'E8':
-    #
-    #     results = os.path.join('puma_results')
-    #     if not os.path.isdir(results):
-    #         os.makedirs(results)
-    #     wrong = os.path.join(results, 'E8^E2_problem.txt')
-    #     with open(wrong,'a') as file_out:
-    #         # all = virus['name']
-    #         # name = re.search('\(([^)]+)', all).group(1)
-    #         virus['name'] = name
-    #         file_out.write(virus['name'] + '\n')
-    #         print('Name added for E8^E2')
-
-
-    #print(virus['URR'])
-
-
-    #print('E8^E2: {}'.format(virus['E8^E2']))
-    #print('E8: {}'.format(virus['E8^E2'][6]))
-    #print('E1^E4:{}'.format(virus['E1^E4']))
-    #print('E1 for E1^E4: {}'.format(virus['E1^E4'][6]))
-    #print('E1: {}'.format(virus['E1']))
-    #print('E2:{}'.format(virus['E2']))
     #to_results(virus)
-    #check_E8_E1(virus,'E8')
-    #result_E1BS(virus)
-    #export_to_csv(virus)
-    #print('Information should be in file')
 
-    # for name in virus:
-    #     print(name)
+    #export_to_csv(virus,out_dir)
+
+    #print('Information should be in file')
 
 
 
